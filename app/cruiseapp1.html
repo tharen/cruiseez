@@ -62,6 +62,13 @@ function tx(store, mode="readonly") {
   return db.transaction(store, mode).objectStore(store);
 }
 
+function idbRequest(req) {
+  return new Promise((resolve, reject) => {
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
 function uid() {
   return crypto.randomUUID();
 }
@@ -98,7 +105,7 @@ async function render() {
 async function renderProjects() {
   title.textContent = "Projects";
   const store = tx("projects");
-  const projects = await store.getAll();
+  const projects = await idbRequest(store.getAll());
 
   const grid = document.createElement("div");
   grid.className = "grid";
@@ -115,11 +122,14 @@ async function renderProjects() {
   const add = document.createElement("button");
   add.textContent = "+ New Project";
   add.onclick = async () => {
-    tx("projects","readwrite").add({
-      id:uid(), name:"", notes:"",
-      polygon:null,
-      plots:[]
-    });
+    const project = {
+      id: uid(),
+      name: "",
+      notes: "",
+      polygon: null,
+      plots: []
+    };
+    await idbRequest(tx("projects", "readwrite").add(project));
     render();
   };
 
@@ -131,7 +141,7 @@ async function renderProjects() {
 ============================================================ */
 async function renderProject() {
   title.textContent = "Project";
-  const p = await tx("projects").get(nav.id);
+  const p = await idbRequest(tx("projects").get(nav.id));
 
   app.innerHTML = `
     <input placeholder="Project Name" value="${p.name}">
@@ -197,7 +207,7 @@ function initMap(project) {
 ============================================================ */
 async function renderPlots() {
   title.textContent = "Plots";
-  const p = await tx("projects").get(nav.id);
+  const p = await idbRequest(tx("projects").get(nav.id));
 
   p.plots.forEach(plot => {
     const c = document.createElement("div");
@@ -243,7 +253,7 @@ async function renderPlots() {
 ============================================================ */
 async function renderTrees() {
   title.textContent = "Trees";
-  const p = await tx("projects").get(nav.pid);
+  const p = await idbRequest(tx("projects").get(nav.pid));
   const plot = p.plots.find(pl=>pl.id===nav.plotId);
 
   const table = document.createElement("table");
@@ -296,7 +306,7 @@ async function renderTrees() {
 ============================================================ */
 async function renderLogs() {
   title.textContent = "Logs";
-  const p = await tx("projects").get(nav.pid);
+  const p = await idbRequest(tx("projects").get(nav.pid));
   const plot = p.plots.find(pl=>pl.id===nav.plotId);
   const tree = plot.trees.find(t=>t.id===nav.treeId);
 
