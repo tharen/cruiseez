@@ -111,7 +111,6 @@ async function render() {
 ============================================================ */
 async function renderProjects() {
   title.textContent = "Projects";
-  const store = tx("projects");
   const projects = await dbGetAll("projects");
 
   const grid = document.createElement("div");
@@ -165,7 +164,7 @@ async function renderProject() {
   const [name, notes] = app.querySelectorAll("input,textarea");
   name.oninput = notes.oninput = () => {
     p.name = name.value; p.notes = notes.value;
-    tx("projects","readwrite").put(p);
+    dbPut("projects", p);
   };
 
   initMap(p);
@@ -175,7 +174,7 @@ async function renderProject() {
 
   document.getElementById("del").onclick = async () => {
     if(confirm("Delete project?")) {
-      tx("projects","readwrite").delete(p.id);
+      dbDel("projects", p.id);
       nav = {view:"projects"};
       render();
     }
@@ -229,7 +228,7 @@ async function renderPlots() {
 
     c.querySelector("input").oninput = e => {
       plot.name = e.target.value;
-      tx("projects","readwrite").put(p);
+      dbPut("projects", p);
     };
 
     c.querySelector("button").onclick =
@@ -238,7 +237,7 @@ async function renderPlots() {
     c.querySelector(".danger").onclick = () => {
       if(confirm("Delete plot?")) {
         p.plots = p.plots.filter(x=>x!==plot);
-        tx("projects","readwrite").put(p);
+        dbPut("projects", p);
         render();
       }
     };
@@ -249,7 +248,7 @@ async function renderPlots() {
   add.textContent = "+ Add Plot";
   add.onclick = () => {
     p.plots.push({id:uid(), name:"", trees:[]});
-    tx("projects","readwrite").put(p);
+    dbPut("projects", p);
     render();
   };
   app.appendChild(add);
@@ -283,7 +282,10 @@ async function renderTrees() {
 
     r.querySelectorAll("td[contenteditable]").forEach((td,i)=>{
       const keys=["number","species","dbh","height"];
-      td.onblur=()=>{ tree[keys[i]]=td.textContent; tx("projects","readwrite").put(p); };
+      td.onblur=()=>{
+        tree[keys[i]]=td.textContent;
+        dbPut("projects", p);
+      };
     });
 
     r.querySelector("button").onclick =
@@ -291,7 +293,7 @@ async function renderTrees() {
 
     r.querySelector(".danger").onclick = () => {
       plot.trees = plot.trees.filter(t=>t!==tree);
-      tx("projects","readwrite").put(p);
+      dbPut("projects", p);
       render();
     };
     table.appendChild(r);
@@ -301,7 +303,7 @@ async function renderTrees() {
   add.textContent = "+ Add Tree";
   add.onclick = () => {
     plot.trees.push({id:uid(), number:"", species:"", dbh:"", height:"", logs:[]});
-    tx("projects","readwrite").put(p);
+    dbPut("projects", p);
     render();
   };
 
@@ -333,11 +335,14 @@ async function renderLogs() {
     `;
     r.querySelectorAll("td[contenteditable]").forEach((td,i)=>{
       const keys=["number","length","diameter","grade"];
-      td.onblur=()=>{ log[keys[i]]=td.textContent; tx("projects","readwrite").put(p); };
+      td.onblur=()=>{
+        log[keys[i]]=td.textContent;
+        dbPut("projects", p);
+      };
     });
     r.querySelector(".danger").onclick=()=>{
       tree.logs=tree.logs.filter(l=>l!==log);
-      tx("projects","readwrite").put(p);
+      dbPut("projects", p);
       render();
     };
     table.appendChild(r);
