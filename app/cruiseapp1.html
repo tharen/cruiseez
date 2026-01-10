@@ -13,19 +13,20 @@
 body { margin:0; font-family:system-ui,sans-serif; background:#f4f6f5; }
 header { background:#2f6f4e; color:#fff; padding:10px; display:flex; gap:10px; }
 header button { background:rgba(255,255,255,.2); border:none; color:#fff; padding:6px 10px; border-radius:4px; }
+header strong { align-items: center;}
 main { padding:12px; }
 .card { background:#fff; padding:12px; border-radius:8px; margin-bottom:10px; border:1px solid #ddd; }
 .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:10px; }
 button { padding:6px 10px; border:none; border-radius:4px; background:#4f8f6f; color:#fff; cursor:pointer; }
 button.danger { background:#c0392b; }
 button.secondary { background:#777; }
-input, textarea { width:100%; margin:4px 0; padding:6px; }
+input, textarea { box-sizing: border-box; width:100%; margin:4px 0; padding:6px; }
 table { width:100%; border-collapse:collapse; }
 th, td { border:1px solid #ccc; padding:6px; text-align:left; }
 td { background:#fff; }
 td[contenteditable] { background:#fdfefe; }
 .actions { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
-#map { height:300px; margin-top:10px; }
+#map { box-sizing: border-box; height:450px; width:100%; margin-top:10px; }
 .hidden { display:none; }
 </style>
 </head>
@@ -48,11 +49,11 @@ const DB_VERSION = 1;
 let db;
 
 function uid() {
-  return crypto.randomUUID();
+    return crypto.randomUUID();
 }
 
 function openDB() {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = e => {
       db = e.target.result;
@@ -60,6 +61,7 @@ function openDB() {
     };
     req.onsuccess = e => { db = e.target.result; resolve(); };
   });
+    req.onerror = e => reject(e.target.error);
 }
 
 function tx(store, mode="readonly") {
@@ -80,6 +82,16 @@ const dbPut = (store, val) => idbRequest(tx(store,"readwrite").put(val));
 const dbAdd = (store, val) => idbRequest(tx(store,"readwrite").add(val));
 const dbDel = (store, key) => idbRequest(tx(store,"readwrite").delete(key));
 
+function debounce(func, delay) {
+    let timeout;
+    return function(...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), delay);
+    };
+}
+
+
 /* ============================================================
    State & Navigation
 ============================================================ */
@@ -95,6 +107,20 @@ function setView(v) { nav = {...v, prev:nav}; render(); }
 /* ============================================================
    Rendering
 ============================================================ */
+/*
+  A simple helper to create an element with attributes and content.
+  e.g., createEl("div", { className: "card" }, "Hello")
+*/
+const createEl = (tag, attrs = {}, ...children) => {
+    const el = document.createElement(tag);
+    Object.assign(el, attrs);
+    el.append(...children);
+    return el;
+};
+
+/* ============================================================
+   Rendering
+============================================================ */
 async function render() {
   app.innerHTML = "";
   backBtn.classList.toggle("hidden", nav.view === "projects");
@@ -102,6 +128,7 @@ async function render() {
   if (nav.view === "projects") renderProjects();
   if (nav.view === "project") renderProject();
   if (nav.view === "plots") renderPlots();
+  if (nav.view === "designs") renderDesigns();
   if (nav.view === "trees") renderTrees();
   if (nav.view === "logs") renderLogs();
 }
@@ -113,31 +140,28 @@ async function renderProjects() {
   title.textContent = "Projects";
   const projects = await dbGetAll("projects");
 
-  const grid = document.createElement("div");
-  grid.className = "grid";
+  const grid = createEl("div", { className: "grid" });
 
   projects.forEach(p => {
-    const c = document.createElement("div");
-    c.className = "card";
-    c.innerHTML = `<h3>${p.name || "Unnamed"}</h3>
-      <small>${p.plots.length} plots</small>`;
-    c.onclick = () => setView({view:"project", id:p.id});
-    grid.appendChild(c);
+    grid.appendChild(
+      createEl("div", {
+        className: "card",
+        onclick: () => setView({view:"project", id:p.id})
+      },
+        createEl("h3", {}, p.name || "Unnamed Project"),
+        createEl("small", {}, `${p.plots.length} plots`)
+      )
+    );
   });
 
-  const add = document.createElement("button");
-  add.textContent = "+ New Project";
-  add.onclick = async () => {
-    const project = {
-      id: uid(),
-      name: "",
-      notes: "",
-      polygon: null,
-      plots: []
-    };
-    await dbAdd("projects", project);
-    render();
-  };
+  const add = createEl("button", {
+    textContent: "+ New Project",
+    onclick: async () => {
+      const project = { id: uid(), name: "", notes: "", polygon: null, plots: [], designs: [] };
+      await dbAdd("projects", project);
+      render();
+    }
+  });
 
   app.append(grid, add);
 }
@@ -151,26 +175,34 @@ async function renderProject() {
 
   app.innerHTML = `
     <input placeholder="Project Name" value="${p.name}">
-    <textarea placeholder="Notes">${p.notes}</textarea>
+    <textarea placeholder="Notes...">${p.notes}</textarea>
     <div id="map"></div>
     <div class="actions">
       <button id="plotsBtn">Plots</button>
+      <button id="designsBtn">Designs</button>
+      <button id="drawBtn" class="secondary">Draw Polygon</button>
+      <button id="clearBtn" class="secondary">Clear Polygon</button>
       <button id="exportJSON">Export JSON</button>
       <button id="exportCSV">Export CSV</button>
       <button class="danger" id="del">Delete</button>
     </div>
   `;
 
+  const debouncedSave = debounce(() => dbPut("projects", p), 500);
   const [name, notes] = app.querySelectorAll("input,textarea");
   name.oninput = notes.oninput = () => {
-    p.name = name.value; p.notes = notes.value;
-    dbPut("projects", p);
+    p.name = name.value;
+    p.notes = notes.value;
+    debouncedSave();
   };
 
   initMap(p);
 
   document.getElementById("plotsBtn").onclick =
     () => setView({view:"plots", id:p.id});
+
+  document.getElementById("designsBtn").onclick =
+    () => setView({view:"designs", id:p.id});
 
   document.getElementById("del").onclick = async () => {
     if(confirm("Delete project?")) {
@@ -187,24 +219,44 @@ async function renderProject() {
 /* ============================================================
    Geometry Map Editor
 ============================================================ */
-function initMap(project) {
-  const map = L.map("map").setView([45, -120], 6);
+let map; // Make map instance available outside the function
+function initMap(p) {
+  if (map) map.remove();
+  // Reassign the global map variable
+  map = L.map("map").setView([45, -120], 6);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
   let polygon;
-  if(project.polygon) {
-    polygon = L.geoJSON(project.polygon).addTo(map);
+  if(p.polygon) {
+    polygon = L.geoJSON(p.polygon).addTo(map);
     map.fitBounds(polygon.getBounds());
   }
 
-  map.on("click", e => {
-    if(!polygon) {
-      polygon = L.polygon([[e.latlng.lat,e.latlng.lng]]).addTo(map);
-    } else {
-      polygon.addLatLng(e.latlng);
+  let isDrawing = false;
+  const drawBtn = document.getElementById("drawBtn");
+
+  drawBtn.onclick = () => {
+    isDrawing = !isDrawing;
+    drawBtn.classList.toggle("secondary", !isDrawing);
+    drawBtn.textContent = isDrawing ? "Finish Drawing" : "Draw Polygon";
+  };
+
+  document.getElementById("clearBtn").onclick = () => {
+    if (polygon) {
+      map.removeLayer(polygon);
+      polygon = null;
+      p.polygon = null;
+      dbPut("projects", p);
     }
-    project.polygon = polygon.toGeoJSON();
-    dbPut("projects", project);
+  };
+
+  map.on("click", e => {
+    if (!isDrawing) return;
+    const latlng = [e.latlng.lat, e.latlng.lng];
+    if (!polygon) polygon = L.polygon([latlng]).addTo(map);
+    else polygon.addLatLng(latlng);
+    p.polygon = polygon.toGeoJSON();
+    dbPut("projects", p);
   });
 }
 
@@ -215,42 +267,118 @@ async function renderPlots() {
   title.textContent = "Plots";
   const p = await dbGet("projects", nav.id);
   
+  const debouncedSave = debounce(() => dbPut("projects", p), 500);
+
   p.plots.forEach(plot => {
-    const c = document.createElement("div");
-    c.className = "card";
-    c.innerHTML = `
-      <input placeholder="Plot ID" value="${plot.name}">
-      <div class="actions">
-        <button>Trees</button>
-        <button class="danger">Delete</button>
-      </div>
-    `;
-
-    c.querySelector("input").oninput = e => {
-      plot.name = e.target.value;
-      dbPut("projects", p);
+    const inputs = {
+        name: createEl("input", { placeholder: "Plot ID", value: plot.name || "" }),
+        planned_lat: createEl("input", { placeholder: "Planned Lat", value: plot.planned_lat || "" }),
+        planned_lon: createEl("input", { placeholder: "Planned Lon", value: plot.planned_lon || "" }),
+        gps_lat: createEl("input", { placeholder: "GPS Lat", value: plot.gps_lat || "" }),
+        gps_lon: createEl("input", { placeholder: "GPS Lon", value: plot.gps_lon || "" }),
     };
 
-    c.querySelector("button").onclick =
-      () => setView({view:"trees", pid:p.id, plotId:plot.id});
+    for (const key in inputs) {
+        inputs[key].oninput = () => {
+            plot[key] = inputs[key].value;
+            debouncedSave();
+        };
+    }
 
-    c.querySelector(".danger").onclick = () => {
-      if(confirm("Delete plot?")) {
-        p.plots = p.plots.filter(x=>x!==plot);
-        dbPut("projects", p);
-        render();
-      }
+    const getGPS = () => {
+        navigator.geolocation.getCurrentPosition(
+            position => {
+                plot.gps_lat = position.coords.latitude.toFixed(6);
+                plot.gps_lon = position.coords.longitude.toFixed(6);
+                inputs.gps_lat.value = plot.gps_lat;
+                inputs.gps_lon.value = plot.gps_lon;
+                dbPut("projects", p);
+            },
+            error => {
+                alert(`GPS Error: ${error.message}`);
+            },
+            { enableHighAccuracy: true }
+        );
     };
-    app.appendChild(c);
+
+    const card = createEl("div", { className: "card" },
+      ...Object.values(inputs),
+      createEl("div", { className: "actions" },
+        createEl("button", {
+          textContent: "Trees",
+          onclick: () => setView({view:"trees", pid:p.id, plotId:plot.id})
+        }),
+        createEl("button", {
+          className: "danger",
+          textContent: "Delete",
+          onclick: () => {
+            if(confirm("Delete plot?")) {
+              p.plots = p.plots.filter(x => x.id !== plot.id);
+              dbPut("projects", p).then(render);
+            }
+          }
+        }),
+        createEl("button", { className: "secondary", textContent: "Get GPS", onclick: getGPS })
+      )
+    );
+    app.appendChild(card);
   });
 
-  const add = document.createElement("button");
-  add.textContent = "+ Add Plot";
-  add.onclick = () => {
-    p.plots.push({id:uid(), name:"", trees:[]});
+  const add = createEl("button", { textContent: "+ Add Plot", onclick: () => {
+    p.plots.push({id:uid(), name:"", trees:[], planned_lat: "", planned_lon: "", gps_lat: "", gps_lon: ""});
     dbPut("projects", p);
     render();
-  };
+  }});
+  app.appendChild(add);
+}
+
+/* ============================================================
+   Designs
+============================================================ */
+async function renderDesigns() {
+  title.textContent = "Sample Designs";
+  const p = await dbGet("projects", nav.id);
+
+  const debouncedSave = debounce(() => dbPut("projects", p), 500);
+
+  (p.designs || []).forEach(design => {
+    const codeInput = createEl("input", { placeholder: "Code", value: design.code });
+    const methodInput = createEl("input", { placeholder: "Sample Method", value: design.method });
+    const sizeInput = createEl("input", { placeholder: "Sample Size", value: design.size });
+    const descTextarea = createEl("textarea", { placeholder: "Description", textContent: design.description });
+
+    const onInput = () => {
+      design.code = codeInput.value;
+      design.method = methodInput.value;
+      design.size = sizeInput.value;
+      design.description = descTextarea.value;
+      debouncedSave();
+    };
+    codeInput.oninput = methodInput.oninput = sizeInput.oninput = descTextarea.oninput = onInput;
+
+    const card = createEl("div", { className: "card" },
+      codeInput, methodInput, sizeInput, descTextarea,
+      createEl("div", { className: "actions" },
+        createEl("button", {
+          className: "danger",
+          textContent: "Delete",
+          onclick: () => {
+            if(confirm("Delete design?")) {
+              p.designs = p.designs.filter(d => d.id !== design.id);
+              dbPut("projects", p).then(render);
+            }
+          }
+        })
+      )
+    );
+    app.appendChild(card);
+  });
+
+  const add = createEl("button", { textContent: "+ Add Design", onclick: () => {
+    if (!p.designs) p.designs = [];
+    p.designs.push({id:uid(), code:"", method:"", size:"", description:""});
+    dbPut("projects", p).then(render);
+  }});
   app.appendChild(add);
 }
 
@@ -262,50 +390,59 @@ async function renderTrees() {
   const p = await dbGet("projects", nav.pid);
   const plot = p.plots.find(pl=>pl.id===nav.plotId);
 
-  const table = document.createElement("table");
-  table.innerHTML = `
-    <tr>
-      <th>#</th><th>Species</th><th>DBH</th><th>Ht</th><th>Logs</th><th>❌</th>
-    </tr>
-  `;
+  const debouncedSave = debounce(() => dbPut("projects", p), 500);
+
+  const table = createEl("table", {},
+    createEl("tr", {},
+      ...["#", "Species", "DBH", "Ht", "Design", "Logs", "❌"].map(h => createEl("th", {}, h))
+    )
+  );
 
   plot.trees.forEach(tree => {
-    const r = document.createElement("tr");
-    r.innerHTML = `
-      <td contenteditable>${tree.number}</td>
-      <td contenteditable>${tree.species}</td>
-      <td contenteditable>${tree.dbh}</td>
-      <td contenteditable>${tree.height}</td>
-      <td><button>Logs</button></td>
-      <td><button class="danger">X</button></td>
-    `;
+    const row = createEl("tr");
+    const treeData = { number: tree.number, species: tree.species, dbh: tree.dbh, height: tree.height};
 
-    r.querySelectorAll("td[contenteditable]").forEach((td,i)=>{
-      const keys=["number","species","dbh","height"];
-      td.onblur=()=>{
-        tree[keys[i]]=td.textContent;
-        dbPut("projects", p);
+    for (const key in treeData) {
+      const cell = createEl("td", { textContent: treeData[key], contentEditable: true, "data-key": key });
+      cell.onblur = () => {
+        tree[cell.dataset.key] = cell.textContent;
+        debouncedSave();
       };
+      row.appendChild(cell);
+    }
+
+    const designSelect = createEl("select");
+    designSelect.append(createEl("option", {value: "", textContent: ""}));
+    (p.designs || []).forEach(d => {
+        designSelect.append(createEl("option", {value: d.code, textContent: d.code, selected: tree.designCode === d.code}));
     });
-
-    r.querySelector("button").onclick =
-      () => setView({view:"logs", pid:p.id, plotId:plot.id, treeId:tree.id});
-
-    r.querySelector(".danger").onclick = () => {
-      plot.trees = plot.trees.filter(t=>t!==tree);
-      dbPut("projects", p);
-      render();
+    designSelect.onchange = () => {
+        tree.designCode = designSelect.value;
+        debouncedSave();
     };
-    table.appendChild(r);
+
+    row.appendChild(
+        createEl("td", {}, designSelect)
+    );
+
+
+    row.append(
+      createEl("td", {}, createEl("button", { textContent: "Logs", onclick: () => setView({view:"logs", pid:p.id, plotId:plot.id, treeId:tree.id}) })),
+      createEl("td", {}, createEl("button", { className: "danger", textContent: "X", onclick: () => {
+        if (confirm("Delete tree?")) {
+            plot.trees = plot.trees.filter(t => t.id !== tree.id);
+            dbPut("projects", p).then(render);
+        }
+      }}))
+    );
+    table.appendChild(row);
   });
 
-  const add = document.createElement("button");
-  add.textContent = "+ Add Tree";
-  add.onclick = () => {
-    plot.trees.push({id:uid(), number:"", species:"", dbh:"", height:"", logs:[]});
+  const add = createEl("button", { textContent: "+ Add Tree", onclick: () => {
+    plot.trees.push({id:uid(), number:"", species:"", dbh:"", height:"", designCode: "", logs:[]});
     dbPut("projects", p);
     render();
-  };
+  }});
 
   app.append(table, add);
 }
@@ -319,42 +456,43 @@ async function renderLogs() {
   const plot = p.plots.find(pl=>pl.id===nav.plotId);
   const tree = plot.trees.find(t=>t.id===nav.treeId);
 
-  const table = document.createElement("table");
-  table.innerHTML = `
-    <tr><th>#</th><th>Length</th><th>Dia</th><th>Grade</th><th>❌</th></tr>
-  `;
+  const debouncedSave = debounce(() => dbPut("projects", p), 500);
+
+  const table = createEl("table", {},
+    createEl("tr", {},
+      ...["#", "Length", "Dia", "Grade", "❌"].map(h => createEl("th", {}, h))
+    )
+  );
 
   tree.logs.forEach(log=>{
-    const r=document.createElement("tr");
-    r.innerHTML=`
-      <td contenteditable>${log.number}</td>
-      <td contenteditable>${log.length}</td>
-      <td contenteditable>${log.diameter}</td>
-      <td contenteditable>${log.grade}</td>
-      <td><button class="danger">X</button></td>
-    `;
-    r.querySelectorAll("td[contenteditable]").forEach((td,i)=>{
-      const keys=["number","length","diameter","grade"];
-      td.onblur=()=>{
-        log[keys[i]]=td.textContent;
-        dbPut("projects", p);
-      };
-    });
-    r.querySelector(".danger").onclick=()=>{
-      tree.logs=tree.logs.filter(l=>l!==log);
-      dbPut("projects", p);
-      render();
-    };
-    table.appendChild(r);
+    const row = createEl("tr");
+    const logData = { number: log.number, length: log.length, diameter: log.diameter, grade: log.grade };
+
+    for (const key in logData) {
+        const cell = createEl("td", { textContent: logData[key], contentEditable: true, "data-key": key });
+        cell.onblur = () => {
+            log[cell.dataset.key] = cell.textContent;
+            debouncedSave();
+        };
+        row.appendChild(cell);
+    }
+
+    row.appendChild(
+      createEl("td", {}, createEl("button", { className: "danger", textContent: "X", onclick: () => {
+        if (confirm("Delete log?")) {
+            tree.logs = tree.logs.filter(l => l.id !== log.id);
+            dbPut("projects", p).then(render);
+        }
+      }}))
+    );
+    table.appendChild(row);
   });
 
-  const add=document.createElement("button");
-  add.textContent="+ Add Log";
-  add.onclick=()=>{
+  const add = createEl("button", { textContent: "+ Add Log", onclick: () => {
     tree.logs.push({id:uid(),number:"",length:"",diameter:"",grade:""});
     dbPut("projects", p);
     render();
-  };
+  }});
 
   app.append(table,add);
 }
@@ -367,15 +505,17 @@ function exportJSON(project) {
 }
 
 function exportCSV(project) {
-  let rows=["project,plot,tree,log,species,dbh,height,length,diameter,grade"];
-  project.plots.forEach(pl=>{
-    pl.trees.forEach(t=>{
-      t.logs.forEach(l=>{
-        rows.push([
-          project.name,pl.name,t.number,l.number,
-          t.species,t.dbh,t.height,l.length,l.diameter,l.grade
-        ].join(","));
-      });
+  let rows=["project,plot,tree,log,species,dbh,height,design,length,diameter,grade"];
+  (project.plots || []).forEach(pl=>{
+    (pl.trees || []).forEach(t=>{
+      if (t.logs && t.logs.length > 0) {
+        t.logs.forEach(l=>{
+          rows.push([project.name,pl.name,t.number,l.number,t.species,t.dbh,t.height,t.designCode,l.length,l.diameter,l.grade].join(","));
+        });
+      } else {
+        // Include trees that have no logs
+        rows.push([project.name,pl.name,t.number,"",t.species,t.dbh,t.height,t.designCode,"","",""].join(","));
+      }
     });
   });
   download(rows.join("\n"),"inventory.csv");
