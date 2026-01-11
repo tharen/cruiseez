@@ -17,7 +17,7 @@ header strong { align-items: center;}
 main { padding:12px; }
 .card { background:#fff; padding:12px; border-radius:8px; margin-bottom:10px; border:1px solid #ddd; }
 .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:10px; }
-.form-row { display: flex; gap: 8px; }
+.flex-row { display: flex; gap: 8px; }
 button { padding:6px 10px; border:none; border-radius:4px; background:#4f8f6f; color:#fff; cursor:pointer; }
 button.danger { background:#c0392b; }
 button.secondary { background:#777; }
@@ -46,7 +46,7 @@ td[contenteditable] { background:#fdfefe; }
    IndexedDB
 ============================================================ */
 const DB_NAME = "forest_inventory_db";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 let db;
 
 function uid() {
@@ -149,9 +149,12 @@ async function renderUnits() {
         className: "card",
         onclick: () => setView({view:"unit", id:p.id})
       },
-        createEl("h3", {}, p.name || "Unnamed Unit"),
-        createEl("h3", {}, p.project_name || "Unnamed Project"),
-        createEl("small", {}, `${p.plots.length} plots`)
+        createEl("h3", {},`Project: ${p.project_name || "<project>"}`),
+        createEl("h3", {},`Unit: ${p.name || "<unit>"}`),
+        createEl("small", {},
+          `${p.net_area || '--'} acres | `,
+          `${p.plots.length} plots`
+        )
       )
     );
   });
@@ -159,7 +162,7 @@ async function renderUnits() {
   const add = createEl("button", {
     textContent: "+ New Unit",
     onclick: async () => {
-      const unit = { id: uid(), name: "", project_id: "", project_name: "", notes: "", polygon: null, plots: [], designs: [] };
+      const unit = { id: uid(), name: "", project_id: "", project_name: "", net_area: "", notes: "", polygon: null, plots: [], designs: [] };
       await dbAdd("units", unit);
       render();
     }
@@ -176,10 +179,11 @@ async function renderUnit() {
   const p = await dbGet("units", nav.id);
 
   app.innerHTML = `
-    <div class="form-row">
+    <div class="flex-row">
       <input placeholder="Unit Name" value="${p.name}">
       <input placeholder="Project Name" value="${p.project_name}">
       <input placeholder="Project ID" value="${p.project_id}">
+      <input placeholder="Net Area" value="${p.net_area}">
     </div>
     <textarea placeholder="Notes...">${p.notes}</textarea>
     <div id="map"></div>
@@ -195,12 +199,13 @@ async function renderUnit() {
   `;
 
   const debouncedSave = debounce(() => dbPut("units", p), 500);
-  const [nameInput, projectNameInput, projectIdInput, notesTextarea] = app.querySelectorAll("input,textarea");
+  const [nameInput, projectNameInput, projectIdInput, projectNetArea, notesTextarea] = app.querySelectorAll("input,textarea");
 
   const onInput = () => {
     p.name = nameInput.value;
     p.project_name = projectNameInput.value;
     p.project_id = projectIdInput.value;
+    p.net_area = projectNetArea.value;
     p.notes = notesTextarea.value;
     debouncedSave();
   };
@@ -282,10 +287,16 @@ async function renderPlots() {
   p.plots.forEach(plot => {
     const inputs = {
         name: createEl("input", { placeholder: "Plot ID", value: plot.name || "" }),
+        slope: createEl("input", { placeholder: "Slope", value: plot.slope || "" }),
+        aspect: createEl("input", { placeholder: "Aspect", value: plot.aspect || "" }),
+        elevation: createEl("input", { placeholder: "Elevation", value: plot.elevation || "" }),
         planned_lat: createEl("input", { placeholder: "Planned Lat", value: plot.planned_lat || "" }),
         planned_lon: createEl("input", { placeholder: "Planned Lon", value: plot.planned_lon || "" }),
         gps_lat: createEl("input", { placeholder: "GPS Lat", value: plot.gps_lat || "" }),
         gps_lon: createEl("input", { placeholder: "GPS Lon", value: plot.gps_lon || "" }),
+        gps_accuracy: createEl("input", { placeholder: "GPS Accuracy", value: plot.gps_accuracy || "" }),
+        gps_timestamp: createEl("input", { placeholder: "GPS Time", value: plot.gps_timestamp || ""}),
+        notes: createEl("textarea", { placeholder: "Notes", textContent: plot.notes || "" })
     };
 
     for (const key in inputs) {
@@ -300,8 +311,12 @@ async function renderPlots() {
             position => {
                 plot.gps_lat = position.coords.latitude.toFixed(6);
                 plot.gps_lon = position.coords.longitude.toFixed(6);
+                plot.gps_accuracy = position.coords.accuracy.toFixed(4);
+                plot.gps_timestamp = Date.now();
                 inputs.gps_lat.value = plot.gps_lat;
                 inputs.gps_lon.value = plot.gps_lon;
+                inputs.gps_accuracy.value = plot.gps_accuracy
+                inputs.gps_timestamp.value = plot.gps_timestamp;
                 dbPut("units", p);
             },
             error => {
@@ -312,7 +327,16 @@ async function renderPlots() {
     };
 
     const card = createEl("div", { className: "card" },
-      ...Object.values(inputs),
+      createEl("div", { className: "flex-row" },inputs.name,),
+      createEl("div", { className: "flex-row" },
+        inputs.slope, inputs.aspect, inputs.elevation
+      ),
+      createEl("div", { className: "flex-row" },
+        inputs.planned_lat, inputs.planned_lon,
+        inputs.gps_lat, inputs.gps_lon,
+        inputs.gps_accuracy, inputs.gps_timestamp,
+      ),
+      inputs.notes,
       createEl("div", { className: "actions" },
         createEl("button", {
           textContent: "Trees",
@@ -335,7 +359,12 @@ async function renderPlots() {
   });
 
   const add = createEl("button", { textContent: "+ Add Plot", onclick: () => {
-    p.plots.push({id:uid(), name:"", trees:[], planned_lat: "", planned_lon: "", gps_lat: "", gps_lon: ""});
+    p.plots.push({
+      id:uid(), name:"", slope: "", aspect: "", elevation: "", notes: "",
+      planned_lat: "", planned_lon: "",
+      gps_lat: "", gps_lon: "", gps_accuracy: "", gps_timestamp: "",
+      trees:[], 
+    });
     dbPut("units", p);
     render();
   }});
@@ -367,7 +396,7 @@ async function renderDesigns() {
     codeInput.oninput = methodInput.oninput = sizeInput.oninput = descTextarea.oninput = onInput;
 
     const card = createEl("div", { className: "card" },
-      createEl("div", { className: "form-row" }, 
+      createEl("div", { className: "flex-row" }, 
         codeInput, methodInput, sizeInput
       ), descTextarea,
       createEl("div", { className: "actions" },
@@ -406,23 +435,17 @@ async function renderTrees() {
 
   const table = createEl("table", {},
     createEl("tr", {},
-      ...["#", "Species", "DBH", "Ht", "Design", "Logs", "❌"].map(h => createEl("th", {}, h))
+      ...[
+        "ST", "#", "Cond", "Spp", "Cnt", "Diam", 
+        "FP", "FF", "TDF", "Bole Ht", "Tot Ht", 
+        "CR", "Pos", "Dmg-1", "Sev-1","Dmg-2", "Sev-2",
+        "Logs", "❌"].map(h => createEl("th", {}, h))
     )
   );
 
   plot.trees.forEach(tree => {
     const row = createEl("tr");
-    const treeData = { number: tree.number, species: tree.species, dbh: tree.dbh, height: tree.height};
-
-    for (const key in treeData) {
-      const cell = createEl("td", { textContent: treeData[key], contentEditable: true, "data-key": key });
-      cell.onblur = () => {
-        tree[cell.dataset.key] = cell.textContent;
-        debouncedSave();
-      };
-      row.appendChild(cell);
-    }
-
+    
     const designSelect = createEl("select");
     designSelect.append(createEl("option", {value: "", textContent: ""}));
     (p.designs || []).forEach(d => {
@@ -436,7 +459,21 @@ async function renderTrees() {
     row.appendChild(
         createEl("td", {}, designSelect)
     );
+        
+    const treeDataKeys = [ 
+      "number", "condition", "species", "count", "diameter", "form_point", "form_factor",
+      "tdf", "bole_height", "total_height", "crown_ratio", "position", "damage_1", "severity_1",
+      "damage_2", "severity_2"
+    ];
 
+    for (const key of treeDataKeys) {
+      const cell = createEl("td", { textContent: tree[key], contentEditable: true, "data-key": key });
+      cell.onblur = () => {
+        tree[key] = cell.textContent;
+        debouncedSave();
+      };
+      row.appendChild(cell);
+    }
 
     row.append(
       createEl("td", {}, createEl("button", { textContent: "Logs", onclick: () => setView({view:"logs", pid:p.id, plotId:plot.id, treeId:tree.id}) })),
@@ -451,7 +488,14 @@ async function renderTrees() {
   });
 
   const add = createEl("button", { textContent: "+ Add Tree", onclick: () => {
-    plot.trees.push({id:uid(), number:"", species:"", dbh:"", height:"", designCode: "", logs:[]});
+    plot.trees.push({
+      id:uid(), number:"", condition: "",  designCode: "", species:"", count:"",
+      diameter:"", form_point: "", form_factor: "",
+      tdf: "", bole_height: "", total_height:"",
+      crown_ratio: "", position: "", damage_1: "", severity_1: "",
+      damage_2: "", severity_2: "",
+      logs:[]
+    });
     dbPut("units", p);
     render();
   }});
@@ -472,21 +516,24 @@ async function renderLogs() {
 
   const table = createEl("table", {},
     createEl("tr", {},
-      ...["#", "Length", "Dia", "Grade", "❌"].map(h => createEl("th", {}, h))
+      ...["#", "Length", "Grade", "Def Type", "Def Amt", "Bole Ht", "Sm Dia", "Lg Dia", "Gr CuFt", "Gr BdFt", "Net CuFt", "Net BdFt", "❌"].map(h => createEl("th", {}, h))
     )
   );
 
   tree.logs.forEach(log=>{
     const row = createEl("tr");
-    const logData = { number: log.number, length: log.length, diameter: log.diameter, grade: log.grade };
 
-    for (const key in logData) {
-        const cell = createEl("td", { textContent: logData[key], contentEditable: true, "data-key": key });
-        cell.onblur = () => {
-            log[cell.dataset.key] = cell.textContent;
-            debouncedSave();
-        };
-        row.appendChild(cell);
+    const logDataKeys = [ 
+      "number", "length", "grade", "def_type", "def_amt", "bole_height", "small_diam", "large_diam", "gross_cuft", "gross_bdft", "net_cuft", "net_bdft"
+    ];
+
+    for (const key of logDataKeys) {
+      const cell = createEl("td", { textContent: log[key], contentEditable: true, "data-key": key });
+      cell.onblur = () => {
+        log[key] = cell.textContent;
+        debouncedSave();
+      };
+      row.appendChild(cell);
     }
 
     row.appendChild(
@@ -517,16 +564,23 @@ function exportJSON(unit) {
 }
 
 function exportCSV(unit) {
-  let rows=["unit,project,plot,tree,log,species,dbh,height,design,length,diameter,grade"];
+  let rows=[
+    "unit,project,plot,design,tree,condition,species,count,diameter,form_point,form_factor,tdf,bole_height,total_height,crown_ratio,position,damage_1,severity_1,damage_2,severity_2,log_number,grade,bole_height,length,small_diam,large_diam,def_type,def_amt,gross_cuft,gross_bdft,net_cuft,net_bdft"];
   (unit.plots || []).forEach(pl=>{
     (pl.trees || []).forEach(t=>{
       if (t.logs && t.logs.length > 0) {
         t.logs.forEach(l=>{
-          rows.push([unit.name,unit.project_name,pl.name,t.number,l.number,t.species,t.dbh,t.height,t.designCode,l.length,l.diameter,l.grade].join(","));
+          rows.push([
+            unit.name,unit.project_name,pl.name,t.designCode,t.number,t.condition,t.species,t.count,t.diameter,t.form_point,t.form_factor,t.tdf,t.bole_height,t.total_height,t.crown_ratio,t.position,t.damage_1,t.severity_1,t.damage_2,t.severity_2,
+            l.number,l.grade,l.bole_height,l.length,l.small_diam,l.large_diam,l.def_type,l.def_amt,l.gross_cuft,l.gross_bdft,l.net_cuft,l.net_bdft
+          ].join(","));
         });
       } else {
         // Include trees that have no logs
-        rows.push([unit.name,unit.project_name,pl.name,t.number,"",t.species,t.dbh,t.height,t.designCode,"","",""].join(","));
+        rows.push([
+          unit.name,unit.project_name,pl.name,t.designCode,t.number,t.condition,t.species,t.count,t.diameter,t.form_point,t.form_factor,t.tdf,t.bole_height,t.total_height,t.crown_ratio,t.position,t.damage_1,t.severity_1,t.damage_2,t.severity_2,
+          "","","","","","","","","","","",""
+        ].join(","));
       }
     });
   });
