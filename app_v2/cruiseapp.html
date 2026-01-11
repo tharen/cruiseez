@@ -287,6 +287,7 @@ async function renderPlots() {
   p.plots.forEach(plot => {
     const inputs = {
         name: createEl("input", { placeholder: "Plot ID", value: plot.name || "" }),
+        cruiser: createEl("input", { placeholder: "Cruiser", value: plot.cruiser || "" }),
         slope: createEl("input", { placeholder: "Slope", value: plot.slope || "" }),
         aspect: createEl("input", { placeholder: "Aspect", value: plot.aspect || "" }),
         elevation: createEl("input", { placeholder: "Elevation", value: plot.elevation || "" }),
@@ -327,7 +328,7 @@ async function renderPlots() {
     };
 
     const card = createEl("div", { className: "card" },
-      createEl("div", { className: "flex-row" },inputs.name,),
+      createEl("div", { className: "flex-row" },inputs.name,inputs.cruiser),
       createEl("div", { className: "flex-row" },
         inputs.slope, inputs.aspect, inputs.elevation
       ),
@@ -360,7 +361,7 @@ async function renderPlots() {
 
   const add = createEl("button", { textContent: "+ Add Plot", onclick: () => {
     p.plots.push({
-      id:uid(), name:"", slope: "", aspect: "", elevation: "", notes: "",
+      id:uid(), name:"", cruiser:"", slope: "", aspect: "", elevation: "", notes: "",
       planned_lat: "", planned_lon: "",
       gps_lat: "", gps_lon: "", gps_accuracy: "", gps_timestamp: "",
       trees:[], 
@@ -571,14 +572,14 @@ function exportCSV(unit) {
       if (t.logs && t.logs.length > 0) {
         t.logs.forEach(l=>{
           rows.push([
-            unit.name,unit.project_name,pl.name,t.designCode,t.number,t.condition,t.species,t.count,t.diameter,t.form_point,t.form_factor,t.tdf,t.bole_height,t.total_height,t.crown_ratio,t.position,t.damage_1,t.severity_1,t.damage_2,t.severity_2,
+            unit.name,unit.project_name,pl.name,pl.cruiser,t.designCode,t.number,t.condition,t.species,t.count,t.diameter,t.form_point,t.form_factor,t.tdf,t.bole_height,t.total_height,t.crown_ratio,t.position,t.damage_1,t.severity_1,t.damage_2,t.severity_2,
             l.number,l.grade,l.bole_height,l.length,l.small_diam,l.large_diam,l.def_type,l.def_amt,l.gross_cuft,l.gross_bdft,l.net_cuft,l.net_bdft
           ].join(","));
         });
       } else {
         // Include trees that have no logs
         rows.push([
-          unit.name,unit.project_name,pl.name,t.designCode,t.number,t.condition,t.species,t.count,t.diameter,t.form_point,t.form_factor,t.tdf,t.bole_height,t.total_height,t.crown_ratio,t.position,t.damage_1,t.severity_1,t.damage_2,t.severity_2,
+          unit.name,unit.project_name,pl.name,pl.cruiser,t.designCode,t.number,t.condition,t.species,t.count,t.diameter,t.form_point,t.form_factor,t.tdf,t.bole_height,t.total_height,t.crown_ratio,t.position,t.damage_1,t.severity_1,t.damage_2,t.severity_2,
           "","","","","","","","","","","",""
         ].join(","));
       }
