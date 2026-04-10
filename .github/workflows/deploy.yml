@@ -12,9 +12,7 @@ permissions:
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./ezcruise
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,17 +23,19 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build project
-        run: npm run build
-
+      - name: Build ezcruise
+        run: |
+          cd ezcruise
+          npm install && npm run build
+          cd ..
+          mkdir -p deploy/ezcruise
+          cp -r ezcruise/dist/* deploy/ezcruise/
+        
       - name: Upload artifact
-        uses: [actions/upload-pages-artifact](https://github.com)@v3
+        uses: actions/upload-pages-artifact@v4.0.0
         with:
           path: './dist' # Ensure this matches your Vite build output directory
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: [actions/deploy-pages](https://github.com/actions/deploy-pages)@v4
+        uses: actions/deploy-pages@v4
