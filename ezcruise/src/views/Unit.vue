@@ -1,0 +1,270 @@
+<script setup lang="ts">
+  import L from 'leaflet';
+  import '@geoman-io/leaflet-geoman-free';
+  import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
+  import 'leaflet/dist/leaflet.css';
+  import * as turf from '@turf/turf';
+// import type { Feature, Polygon } from 'geojson';
+
+  import { ref, onMounted, onUnmounted } from 'vue'
+  import { dbGet, dbPut, dbDel, debounce } from '../db.ts';
+
+  const props = defineProps(['navData'])
+  const emit = defineEmits(['update-title','nav'])
+
+  interface Unit {
+    uid: string;
+    name: string;
+    project_id: string;
+    project_name: string;
+    gross_area: number;
+    net_area: number;
+    notes: string;
+    polygon: any; // Adjust 'any' if you know the actual type of polygon
+    polygon_edited_timestamp: any; // Adjust if you know the actual type
+    polygon_edited_by: string;
+    plots: any[]; // Adjust if you know the actual type of plots
+    designs: any[]; // Adjust if you know the actual type of designs
+  }
+  const unit = ref<Unit>();
+
+  let map = L.Map;
+  let drawnItems = L.FeatureGroup;
+  let home = { lat: 44.2, lng: -120.5583, zoom: 7}
+
+  const save = debounce(() => {
+      if (unit.value) dbPut("units", JSON.parse(JSON.stringify(unit.value)));
+  }, 500);
+
+  const initMap = () => {
+      // if (map) map.remove();
+      map = L.map("map", {
+        zoomSnap: 0.2,
+        zoomDelta: 0.2,
+        wheelPxPerZoomLevel: 150
+      }).setView([home.lat, home.lng], home.zoom);
+
+      const osmLayer = L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        // attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      });
+      const imageryLayer = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        // attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+      });
+
+      const baseLayers = {
+          "OpenStreetMap": osmLayer,
+          "World Imagery": imageryLayer
+      };
+
+      const layerControl = L.control.layers(baseLayers);
+      layerControl.addTo(map);
+
+      // Activate the last selected base layer
+      let active_layer = JSON.parse(localStorage.getItem('active_layer'));
+      if (active_layer) {
+        Object.keys(baseLayers).forEach(function(key) {
+          if (active_layer === key) {
+            console.log('restore active_layer: ', key);
+            baseLayers[key].addTo(map);
+          }
+        });
+      } else {
+        osmLayer.addTo(map);
+      }
+
+      // Geoman layer for the unit polygon
+      drawnItems = new L.FeatureGroup();
+      map.addLayer(drawnItems);
+
+      map.pm.setGlobalOptions({ 
+          layerGroup: drawnItems,
+      });
+
+      map.pm.setGlobalOptions({ tooltips: false });
+
+      const handleEdit = () => {
+          unit.value.polygon = drawnItems.toGeoJSON();
+          unit.value.gross_area = (turf.area(unit.value.polygon)/4046.86).toFixed(3);
+          unit.value.polygon_edited_timestamp = Date.now();
+          unit.value.polygon_edited_by = "user"; // Placeholder for user identification
+          save();
+      };
+
+      const bindEvents = (layer) => {
+          layer.on('pm:edit', handleEdit);
+          layer.on('pm:dragend', handleEdit);
+          layer.on('pm:cut', handleEdit);
+      };
+
+      if (unit.value.polygon) {
+          const polygonLayer = L.geoJSON(unit.value.polygon);
+          polygonLayer.eachLayer(layer => {
+              drawnItems.addLayer(layer);
+              bindEvents(layer);
+          });
+          map.fitBounds(drawnItems.getBounds());
+          home.lat = drawnItems.getBounds().getCenter().lat;
+          home.lng = drawnItems.getBounds().getCenter().lng;
+          home.zoom = map.getZoom();
+          map.setView([home.lat, home.lng], home.zoom);
+      }
+
+      map.pm.addControls({
+          position: 'topleft',
+          drawMarker: false,
+          drawCircleMarker: false,
+          drawPolyline: false,
+          drawRectangle: false,
+          drawCircle: false,
+          drawText: false,
+          editMode: true,
+          dragMode: false,
+          cutPolygon: false,
+          removalMode: true,
+          rotateMode: false,
+          drawPolygon: drawnItems.getLayers().length === 0
+      });
+
+      map.on('pm:create', e => {
+          drawnItems.clearLayers();
+          drawnItems.addLayer(e.layer);
+          bindEvents(e.layer);
+          handleEdit();
+          map.pm.addControls({ drawPolygon: false });
+      });
+
+      map.on('pm:remove', e => {
+          if (confirm("Delete Polygon?")) { // The layer is already removed by geoman, this is for confirmation
+              unit.value.polygon = null;
+              unit.value.gross_area = null;
+              unit.value.polygon_edited_timestamp = Date.now();
+              unit.value.polygon_edited_by = "user"; // Placeholder for user identification
+              save();
+              map.pm.addControls({ drawPolygon: true });
+          } else {
+              // If deletion is cancelled, add the layer back to the map
+              drawnItems.addLayer(e.layer);
+          }
+      });
+
+      // Store the user preference for the last selected base layer
+      map.on('baselayerchange', e => {
+        Object.keys(baseLayers).forEach(function(key) {
+          if (map.hasLayer(baseLayers[key])) {
+            console.log('save active_layer: ' + key);
+            localStorage.setItem('active_layer', JSON.stringify(key));
+          }
+        })
+      })
+  };
+
+  onMounted(async () => {
+      emit('update-title', 'Unit');
+      unit.value = await dbGet('units', props.navData.uid);
+      setTimeout(initMap, 50); // delay to ensure element mounts
+  });
+
+  onUnmounted(() => {
+    if (map) map.remove(); 
+  });
+
+  const del = async () => {
+    if (!unit.value) return; // Check if unit.value exists
+    if (confirm("Delete unit?")) {
+        await dbDel("units", unit.value.uid);
+        emit('nav', {view:'units'});
+    }
+  };
+
+  const download = (text: string, name: string) => {
+      const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text])); a.download=name; a.click();
+  };
+
+  const exportJSON = () => {
+      if (!unit.value) return; // Check if unit.value exists
+      const download = (text: string, name: string) => {
+          const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text])); a.download=name; a.click();
+      };
+      download(JSON.stringify(unit.value,null,2), "unit.json");
+  };
+
+  const exportCSV = () => {
+    if (!unit.value) return; // Check if unit.value exists
+    let rows=["unit,project,plot,design,tree,condition,species,count,diameter,form_point,form_factor,tdf,bole_height,total_height,crown_ratio,position,damage_1,severity_1,damage_2,severity_2,log_number,grade,bole_height,length,small_diam,large_diam,def_type,def_amt,gross_cuft,gross_bdft,net_cuft,net_bdft"];
+    (unit.value.plots || []).forEach(pl=>{ (pl.trees || []).forEach(t=>{ if (t.logs && t.logs.length > 0) { t.logs.forEach(l=>{ rows.push([unit.value.name,unit.value.project_name,pl.name,pl.crew,t.designCode,t.number,t.condition,t.species,t.count,t.diameter,t.form_point,t.form_factor,t.tdf,t.bole_height,t.total_height,t.crown_ratio,t.position,t.damage_1,t.severity_1,t.damage_2,t.severity_2,l.number,l.grade,l.bole_height,l.length,l.small_diam,l.large_diam,l.def_type,l.def_amt,l.gross_cuft,l.gross_bdft,l.net_cuft,l.net_bdft].join(",")); }); } else { rows.push([unit.value.name,unit.value.project_name,pl.name,pl.crew,t.designCode,t.number,t.condition,t.species,t.count,t.diameter,t.form_point,t.form_factor,t.tdf,t.bole_height,t.total_height,t.crown_ratio,t.position,t.damage_1,t.severity_1,t.damage_2,t.severity_2,"","","","","","","","","","",""].join(",")); } }); });
+    download(rows.join("\n"), "inventory.csv");
+  };
+</script>
+
+<style scoped>
+.view {
+  display: flex;
+  flex-direction: column;
+  height: 90vh;
+  /* background: blue; */
+}
+
+.unit-detail {
+  flex-shrink: 0; /* Prevent header/footer from collapsing */
+  padding: 0px;
+  margin: 1px;
+  /* background: #e0e0e0; */
+}
+
+#map {
+  margin: 0px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  /* height: calc(100vh - 200px); */
+  width: 100%;
+}
+
+.actions {
+  bottom: 0
+}
+
+</style>
+
+<template>
+  <div v-if="unit" class="view">
+    <div class="unit-detail">
+      <div class="flex-row">
+        <div class="floating-label">
+          <input placeholder=" " v-model="unit.name" @input="save">
+          <label>Unit</label>
+        </div>
+        <div class="floating-label">
+          <input placeholder=" " v-model="unit.project_name" @input="save">
+          <label>Project</label>
+        </div>
+        <div class="floating-label">
+          <input placeholder=" " v-model="unit.project_id" @input="save">
+          <label>Project ID</label>
+        </div>
+        <div class="floating-label">
+          <input placeholder=" " v-model="unit.gross_area" readonly>
+          <label>Gross Area</label>
+        </div>
+        <div class="floating-label">
+          <input placeholder=" " v-model="unit.net_area" @input="save">
+          <label>Net Area</label>
+        </div>
+      </div>
+      <div class="floating-label">
+        <textarea placeholder=" " v-model="unit.notes" @input="save"></textarea>
+        <label>Notes</label>
+      </div>
+    </div>
+    <div id="map"></div>
+    <div class="actions">
+      <button @click="$emit('nav', {view:'plots', uid:unit.uid})">Plots</button>
+      <button @click="$emit('nav', {view:'designs', uid:unit.uid})">Designs</button>
+      <button @click="exportJSON">Export JSON</button>
+      <button @click="exportCSV">Export CSV</button>
+      <button class="danger push-right" @click="del">Delete</button>
+    </div>
+</div>
+</template>

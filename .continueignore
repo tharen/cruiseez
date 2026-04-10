@@ -1,0 +1,6 @@
+.git/
+.pixi/
+node_modules/
+app/
+app_v2/
+ezcruise/node_modules/

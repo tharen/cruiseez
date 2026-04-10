@@ -1,0 +1,114 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { dbPut, dbGet, getSetup, debounce, uid } from '../db.ts';
+
+const props = defineProps(['navData'])
+const emit = defineEmits(['update-title','nav'])
+const save = debounce(() => { if (unit.value) dbPut("units", JSON.parse(JSON.stringify(unit.value))); }, 500);
+
+const unit = ref(null);
+
+onMounted(async () => {
+  emit('update-title', 'Plots');
+  unit.value = await dbGet('units', props.navData.uid);
+  const setup = await getSetup();
+});
+
+const addPlot = () => {
+  // TODO: Auto increment plot_num, copy crew from previous plot
+  unit.value.plots.push({ uid: uid(), plot_num:"", crew:"", status:"Planned", slope: "", aspect: "", elevation: "", notes: "", planned_lat: "", planned_lon: "", gps_lat: "", gps_lon: "", gps_accuracy: "", gps_timestamp: "", trees:[] });
+  save();
+};
+const delPlot = (plotId) => {
+  if (confirm("Delete plot?")) { unit.value.plots = unit.value.plots.filter(x => x.uid !== plotId); save(); }
+};
+const getGPS = (plot) => {
+  // TODO: Weighted average position and accuracy, where weight is the inverse of accuracy
+  navigator.geolocation.getCurrentPosition(
+    position => {
+      plot.gps_lat = position.coords.latitude.toFixed(6); // Roughly 8 cm resolution @ 45 deg north
+      plot.gps_lon = position.coords.longitude.toFixed(6);
+      plot.gps_accuracy = position.coords.accuracy.toFixed(2);
+      plot.gps_timestamp = Date.now();
+      save();
+    },
+    error => alert(`GPS Error: ${error.message}`),
+    {
+      enableHighAccuracy: true,
+      maximumAge: 0
+    }
+  );
+};
+</script>
+
+<template>
+<div v-if="unit">
+  <div v-for="plot in unit.plots" :key="plot.uid" class="card">
+    <div class="flex-row">
+      <div class="floating-label">
+        <input placeholder=" " v-model="plot.plot_num" @input="save">
+        <label>Plot</label>
+      </div>
+      <div class="floating-label">
+        <input placeholder=" " v-model="plot.crew" @input="save">
+        <label>Crew</label>
+      </div>
+      <div class="floating-label">
+        <input placeholder=" " v-model="plot.status" @input="save">
+        <label>Status</label>
+      </div>
+    </div>
+    <div class="flex-row">
+      <div class="floating-label">
+        <input placeholder=" " v-model="plot.slope" @input="save">
+        <label>Slope (%)</label>
+      </div>
+      <div class="floating-label">
+        <input placeholder=" " v-model="plot.aspect" @input="save">
+        <label>Aspect (deg)</label>
+      </div>
+      <div class="floating-label">
+        <input placeholder=" " v-model="plot.elevation" @input="save">
+        <label>Elev (ft)</label>
+      </div>
+    </div>
+    <div class="flex-row">
+      <div class="floating-label">
+        <input placeholder=" " v-model="plot.planned_lat" @input="save">
+        <label>Plan Lat</label>
+      </div>
+      <div class="floating-label">
+        <input placeholder=" " v-model="plot.planned_lon" @input="save">
+        <label>Plan Lon</label>
+      </div>
+      <div class="floating-label">
+        <input placeholder=" " v-model="plot.gps_lat" readonly>
+        <label>GPS Lat</label>
+      </div>
+      <div class="floating-label">
+        <input placeholder=" " v-model="plot.gps_lon" readonly>
+        <label>GPS Lon</label>
+      </div>
+      <div class="floating-label">
+        <input placeholder=" " v-model="plot.gps_accuracy" readonly>
+        <label>Acc (m)</label>
+      </div>
+      <div class="floating-label">
+        <input placeholder=" " v-model="plot.gps_timestamp" readonly>
+        <label>Time</label>
+      </div>
+    </div>
+    <div class="floating-label">
+      <textarea placeholder=" " v-model="plot.notes" @input="save"></textarea>
+      <label>Notes</label>
+    </div>
+    <div class="actions">
+      <button @click="$emit('nav', {view:'trees', pid:unit.uid, plotId:plot.uid})">Trees</button>
+      <button @click="$emit('nav', {view:'trees-card', pid:unit.uid, plotId:plot.uid})">Trees-Card</button>
+      <button class="secondary" @click="getGPS(plot)">Get GPS</button>
+      <button class="danger push-right" @click="delPlot(plot.uid)">Delete</button>
+    </div>
+  </div>
+  <button @click="addPlot">+ Add Plot</button>
+</div>
+</template>
