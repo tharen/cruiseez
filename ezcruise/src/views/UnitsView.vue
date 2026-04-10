@@ -1,23 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { dbGetAll, dbAdd, uid } from '../db.ts';
+import type { Unit } from '../types/api.ts';
 
 const emit = defineEmits(['update-title','nav'])
-
-interface Unit {
-  uid: string;
-  name: string;
-  project_id: string;
-  project_name: string;
-  gross_area: number;
-  net_area: number;
-  notes: string;
-  polygon: any; // Adjust 'any' if you know the actual type of polygon
-  polygon_edited_timestamp: any; // Adjust if you know the actual type
-  polygon_edited_by: string;
-  plots: any[]; // Adjust if you know the actual type of plots
-  designs: any[]; // Adjust if you know the actual type of designs
-}
 
 const units = ref<Unit[]>([]);
 const load = async () => {

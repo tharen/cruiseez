@@ -1,59 +1,113 @@
+import type { Setup } from './types/api';
+
+// 1. Define Store Name types for strict indexing
+type StoreName = 'units' | 'setup';
+
 const DB_NAME = "ez_cruise_db";
 const DB_VERSION = 1;
-let db;
+let db: IDBDatabase;
 
-export function uid() {
-    return crypto.randomUUID();
+export function uid(): string {
+  return crypto.randomUUID();
 }
 
-export function openDB() {
+/**
+ * Initializes the IndexedDB instance and creates object stores if missing.
+ */
+export function openDB(): Promise<void> {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = e => {
-      db = e.target.result;
+    
+    req.onupgradeneeded = (e: IDBVersionChangeEvent) => {
+      const target = e.target as IDBOpenDBRequest;
+      db = target.result;
+      
+      // Store for Unit objects (keyed by their uid)
       if (!db.objectStoreNames.contains("units")) {
         db.createObjectStore("units", { keyPath: "uid" });
       }
-      // Ensure setup store is present
+      // Store for general configuration/setup
       if (!db.objectStoreNames.contains('setup')) {
         db.createObjectStore('setup');
       }
     };
-    req.onsuccess = e => { db = e.target.result; resolve(); };
-    req.onerror = e => reject(e.target.error);
+
+    req.onsuccess = (e: Event) => {
+      const target = e.target as IDBOpenDBRequest;
+      db = target.result;
+      resolve();
+    };
+
+    req.onerror = (e: Event) => {
+      const target = e.target as IDBOpenDBRequest;
+      reject(target.error);
+    };
   });
 }
 
-function tx(store, mode = "readonly") {
+/**
+ * Helper to create a transaction and access a specific object store.
+ */
+function tx(store: StoreName, mode: IDBTransactionMode = "readonly"): IDBObjectStore {
   return db.transaction(store, mode).objectStore(store);
 }
 
-function idbRequest(req) {
+/**
+ * Generic wrapper for IDBRequest to return a typed Promise.
+ */
+function idbRequest<T>(req: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
   });
 }
 
-export const dbGet = (store, key) => idbRequest(tx(store).get(key));
-export const dbGetAll = store => idbRequest(tx(store).getAll());
-export const dbPut = (store, val) => idbRequest(tx(store, "readwrite").put(val));
-export const dbAdd = (store, val) => idbRequest(tx(store, "readwrite").add(val));
-export const dbDel = (store, key) => idbRequest(tx(store, "readwrite").delete(key));
+// --- CRUD Operations using api.ts interfaces ---
 
-export function debounce(func, delay) {
-  let timeout;
-  return function (...args) {
-    const context = this;
+/** Retrieves a single record by its key */
+export const dbGet = <T>(store: StoreName, key: IDBValidKey): Promise<T> => 
+  idbRequest(tx(store).get(key));
+
+/** Retrieves all records from a store (e.g., all Units) */
+export const dbGetAll = <T>(store: StoreName): Promise<T[]> => 
+  idbRequest(tx(store).getAll());
+
+/** Updates or inserts a record */
+export const dbPut = <T>(store: StoreName, val: T, key?: IDBValidKey): Promise<IDBValidKey> => 
+  idbRequest(tx(store, "readwrite").put(val, key));
+
+/** Adds a new record (fails if key exists) */
+export const dbAdd = <T>(store: StoreName, val: T): Promise<IDBValidKey> => 
+  idbRequest(tx(store, "readwrite").add(val));
+
+/** Deletes a record by its key */
+export const dbDel = (store: StoreName, key: IDBValidKey): Promise<undefined> => 
+  idbRequest(tx(store, "readwrite").delete(key));
+
+// --- Specific Implementations ---
+
+/**
+ * Standard debounce utility for high-frequency saves.
+ */
+export function debounce<T extends (...args: any[]) => any>(func: T, delay: number) {
+  let timeout: ReturnType<typeof setTimeout>;
+  
+  return function (this: any, ...args: Parameters<T>) {
     clearTimeout(timeout);
-    timeout = setTimeout(() => func.apply(context, args), delay);
+    timeout = setTimeout(() => func.apply(this, args), delay);
   };
 }
 
-export async function getSetup() {
-  return idbRequest(tx('setup').get('config'));
+/**
+ * Fetches the setup configuration using the Setup interface from api.ts
+ */
+export async function getSetup(): Promise<Setup | undefined> {
+  return dbGet<Setup>('setup', 'config');
 }
 
-export async function saveSetup(setupData) {
-  return idbRequest(tx('setup', 'readwrite').put(setupData, 'config'));
+/**
+ * Saves the setup configuration using the Setup interface from api.ts
+ */
+export async function saveSetup(setupData: Setup): Promise<IDBValidKey> {
+  return dbPut<Setup>('setup', setupData, 'config');
 }

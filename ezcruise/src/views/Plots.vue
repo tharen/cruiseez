@@ -1,44 +1,114 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { dbPut, dbGet, getSetup, debounce, uid } from '../db.ts';
+import type { Unit, Plot, Setup } from '../types/api.ts';
 
 const props = defineProps(['navData'])
 const emit = defineEmits(['update-title','nav'])
 const save = debounce(() => { if (unit.value) dbPut("units", JSON.parse(JSON.stringify(unit.value))); }, 500);
 
-const unit = ref(null);
+const unit = ref<Unit>();
+const setup = ref<Setup>();
 
 onMounted(async () => {
   emit('update-title', 'Plots');
-  unit.value = await dbGet('units', props.navData.uid);
-  const setup = await getSetup();
+  unit.value = await dbGet('units', props.navData.uid) as Unit;
+  setup.value = await getSetup() as Setup;
 });
 
 const addPlot = () => {
   // TODO: Auto increment plot_num, copy crew from previous plot
-  unit.value.plots.push({ uid: uid(), plot_num:"", crew:"", status:"Planned", slope: "", aspect: "", elevation: "", notes: "", planned_lat: "", planned_lon: "", gps_lat: "", gps_lon: "", gps_accuracy: "", gps_timestamp: "", trees:[] });
+  if (!unit.value) return;
+  const nextPlot = 0;
+  unit.value.plots.push({
+    uid: uid(), plot_num:nextPlot, crew:"", status:"Planned",
+    slope: 0.0, aspect: 0.0, elevation: 0.0, notes: "",
+    planned_lat: 0.0, planned_lon: 0.0, 
+    gps_lat: 0.0, gps_lon: 0.0, gps_accuracy: 0.0,
+    gps_timestamp: 0, gps_n_points: 0,
+    trees:[]
+  });
   save();
 };
-const delPlot = (plotId) => {
-  if (confirm("Delete plot?")) { unit.value.plots = unit.value.plots.filter(x => x.uid !== plotId); save(); }
+const delPlot = (plotId: string) => {
+  if (!unit.value) return;
+  if (confirm("Delete plot?")) {
+    unit.value.plots = unit.value.plots.filter(x => x.uid !== plotId);
+    save();
+  }
 };
-const getGPS = (plot) => {
+
+const getGPS = (plot: Plot) => {
   // TODO: Weighted average position and accuracy, where weight is the inverse of accuracy
-  navigator.geolocation.getCurrentPosition(
-    position => {
-      plot.gps_lat = position.coords.latitude.toFixed(6); // Roughly 8 cm resolution @ 45 deg north
-      plot.gps_lon = position.coords.longitude.toFixed(6);
-      plot.gps_accuracy = position.coords.accuracy.toFixed(2);
-      plot.gps_timestamp = Date.now();
-      save();
-    },
-    error => alert(`GPS Error: ${error.message}`),
-    {
-      enableHighAccuracy: true,
-      maximumAge: 0
+  // TODO: Verify that there is a value in the avg_gps_time, warn the user if not
+  if (!setup.value) return;
+  const gps_avg_time = setup.value.gps_avg_time;
+  
+  // Use a temporary ref to store collected positions
+  const positions: { lat: number, lon: number, acc: number, timestamp: number }[] = [];
+  let count = 0;
+  let timer: number | null = null;
+
+  const collectPosition = () => {
+    if (count >= gps_avg_time) {
+      // Stop watching after collecting enough points
+      if (timer !== null) {
+        // navigator.geolocation.clearWatch(timer);
+      }
+      
+      if (positions.length > 0) {
+        const totalLat = positions.reduce((sum, p) => sum + p.lat, 0);
+        const totalLon = positions.reduce((sum, p) => sum + p.lon, 0);
+        const totalAcc = positions.reduce((sum, p) => sum + p.acc, 0);
+        
+        // Calculate averages
+        plot.gps_lat = totalLat / positions.length;
+        plot.gps_lon = totalLon / positions.length;
+        // Simple average accuracy (note: averaging accuracy is mathematically complex, 
+        // but for simplicity, we average the reported accuracy here)
+        plot.gps_accuracy = totalAcc / positions.length; 
+        
+        // Use the timestamp of the last successful reading
+        plot.gps_timestamp = positions[positions.length - 1].timestamp;
+        plot.gps_n_points = positions.length; // Add the number of points averaged
+        
+        save();
+      }
+      return;
     }
-  );
+
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        positions.push({
+          lat: position.coords.latitude,
+          lon: position.coords.longitude,
+          acc: position.coords.accuracy,
+          timestamp: Date.now()
+        });
+        count++;
+        
+        // Schedule the next collection
+        timer = setTimeout(collectPosition, 1000); // Collect every second
+      },
+      error => {
+        console.error(`GPS Error: ${error.message}`);
+        // If an error occurs, stop the timer
+        if (timer) {
+          navigator.geolocation.clearWatch(timer);
+        }
+        alert(`GPS Error: ${error.message}`);
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 0
+      }
+    );
+  };
+
+  // Start the collection process
+  timer = setTimeout(collectPosition, 1000);
 };
+
 </script>
 
 <template>

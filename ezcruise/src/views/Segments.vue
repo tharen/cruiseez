@@ -6,29 +6,43 @@
 
 import { ref, onMounted } from 'vue'
 import { dbGet, dbPut, debounce, uid } from '../db.ts';
+import type {Unit, Tree } from '../types/api.ts';
 
 const props = defineProps(['navData'])
 const emit = defineEmits(['update-title','nav'])
 
-const unit = ref(null);
-const tree = ref(null);
+const unit = ref<Unit>();
+const tree = ref<Tree>();
 const save = debounce(() => { if (unit.value) dbPut("units", JSON.parse(JSON.stringify(unit.value))); }, 500);
 
 onMounted(async () => {
     emit('update-title', 'Segments');
-    unit.value = await dbGet('units', props.navData.pid);
-    tree.value = unit.value.plots.find(pl => pl.uid === props.navData.plotId).trees.find(t => t.uid === props.navData.treeId);
+    const data = await dbGet('units', props.navData.pid);
+    unit.value = data as Unit;
+    const currentUnit = unit.value;
+    if (!currentUnit) return;
+    if (!props) return;
+    const plot = currentUnit.plots.find(pl => pl.uid === props.navData.plotId);
+    if (!plot) return;
+    tree.value = plot.trees.find(t => t.uid === props.navData.treeId);
 });
-const addLog = () => { tree.value.segments.push({
-  uid:uid(),position:0,length:0.0,grade:"",
+
+const addLog = (): void => { 
+  const currentTree = tree.value;
+  if (!currentTree) return;
+  currentTree.segments.push({
+  uid:uid(),position:0,length:0.0,sort:"",grade:"",
   def_type:"",def_amt:0,bole_height:0.0,
   small_diam:0.0,large_diam:0.0,
   gross_cuft:0.0,gross_bdft:0.0,
   net_cuft:0.0,net_bdft:0.0
 }); save(); };
-const delLog = (logId) => {
+
+const delLog = (logId: string) => {
+  const currentTree = tree.value;
+  if (!currentTree) return;
   if (confirm("Delete log?")) { 
-    tree.value.segments = tree.value.segments.filter(l => l.uid !== logId);
+    currentTree.segments = currentTree.segments.filter(l => l.uid !== logId);
     save();
   }
 };

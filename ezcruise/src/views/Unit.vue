@@ -8,28 +8,15 @@
 
   import { ref, onMounted, onUnmounted } from 'vue'
   import { dbGet, dbPut, dbDel, debounce } from '../db.ts';
+  import type { Unit, Tree} from '../types/api.ts'
 
   const props = defineProps(['navData'])
   const emit = defineEmits(['update-title','nav'])
 
-  interface Unit {
-    uid: string;
-    name: string;
-    project_id: string;
-    project_name: string;
-    gross_area: number;
-    net_area: number;
-    notes: string;
-    polygon: any; // Adjust 'any' if you know the actual type of polygon
-    polygon_edited_timestamp: any; // Adjust if you know the actual type
-    polygon_edited_by: string;
-    plots: any[]; // Adjust if you know the actual type of plots
-    designs: any[]; // Adjust if you know the actual type of designs
-  }
   const unit = ref<Unit>();
 
-  let map = L.Map;
-  let drawnItems = L.FeatureGroup;
+  let map: L.Map;
+  let drawnItems: L.FeatureGroup;
   let home = { lat: 44.2, lng: -120.5583, zoom: 7}
 
   const save = debounce(() => {
@@ -37,23 +24,25 @@
   }, 500);
 
   const initMap = () => {
-      // if (map) map.remove();
+      const currentUnit = unit.value;
+      if (!currentUnit) return;
+
       map = L.map("map", {
         zoomSnap: 0.2,
         zoomDelta: 0.2,
         wheelPxPerZoomLevel: 150
       }).setView([home.lat, home.lng], home.zoom);
 
-      const osmLayer = L.tileLayer(
+      const osmLayer: L.TileLayer = L.tileLayer(
         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         // attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       });
-      const imageryLayer = L.tileLayer(
+      const imageryLayer: L.TileLayer = L.tileLayer(
         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         // attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
       });
 
-      const baseLayers = {
+      const baseLayers: Record<string, L.TileLayer> = {
           "OpenStreetMap": osmLayer,
           "World Imagery": imageryLayer
       };
@@ -61,8 +50,9 @@
       const layerControl = L.control.layers(baseLayers);
       layerControl.addTo(map);
 
-      // Activate the last selected base layer
-      let active_layer = JSON.parse(localStorage.getItem('active_layer'));
+      // Handle Active layer persistence
+      const active_layer_raw = localStorage.getItem('active_layer');
+      const active_layer: string | null = active_layer_raw ? JSON.parse(active_layer_raw) : null;
       if (active_layer) {
         Object.keys(baseLayers).forEach(function(key) {
           if (active_layer === key) {
@@ -84,31 +74,35 @@
 
       map.pm.setGlobalOptions({ tooltips: false });
 
-      const handleEdit = () => {
-          unit.value.polygon = drawnItems.toGeoJSON();
-          unit.value.gross_area = (turf.area(unit.value.polygon)/4046.86).toFixed(3);
-          unit.value.polygon_edited_timestamp = Date.now();
-          unit.value.polygon_edited_by = "user"; // Placeholder for user identification
+      const handleEdit = (): void => {
+          currentUnit.polygon = drawnItems.toGeoJSON();
+          currentUnit.gross_area = (turf.area(currentUnit.polygon)/4046.86);
+          currentUnit.polygon_edited_timestamp = Date.now();
+          currentUnit.polygon_edited_by = "user"; // Placeholder for user identification
           save();
       };
 
-      const bindEvents = (layer) => {
+      const bindEvents = (layer: L.Layer): void => {
           layer.on('pm:edit', handleEdit);
           layer.on('pm:dragend', handleEdit);
           layer.on('pm:cut', handleEdit);
       };
 
-      if (unit.value.polygon) {
-          const polygonLayer = L.geoJSON(unit.value.polygon);
-          polygonLayer.eachLayer(layer => {
+      if (currentUnit.polygon) {
+          const polygonLayer = L.geoJSON(currentUnit.polygon);
+          polygonLayer.eachLayer((layer: L.Layer) => {
               drawnItems.addLayer(layer);
               bindEvents(layer);
           });
-          map.fitBounds(drawnItems.getBounds());
-          home.lat = drawnItems.getBounds().getCenter().lat;
-          home.lng = drawnItems.getBounds().getCenter().lng;
-          home.zoom = map.getZoom();
-          map.setView([home.lat, home.lng], home.zoom);
+
+          const bounds = drawnItems.getBounds();
+          if (bounds.isValid()) {
+            map.fitBounds(drawnItems.getBounds());
+            home.lat = drawnItems.getBounds().getCenter().lat;
+            home.lng = drawnItems.getBounds().getCenter().lng;
+            home.zoom = map.getZoom();
+            map.setView([home.lat, home.lng], home.zoom);
+          }
       }
 
       map.pm.addControls({
@@ -127,7 +121,7 @@
           drawPolygon: drawnItems.getLayers().length === 0
       });
 
-      map.on('pm:create', e => {
+      map.on('pm:create', (e: any) => {
           drawnItems.clearLayers();
           drawnItems.addLayer(e.layer);
           bindEvents(e.layer);
@@ -135,12 +129,12 @@
           map.pm.addControls({ drawPolygon: false });
       });
 
-      map.on('pm:remove', e => {
+      map.on('pm:remove', (e: any) => {
           if (confirm("Delete Polygon?")) { // The layer is already removed by geoman, this is for confirmation
-              unit.value.polygon = null;
-              unit.value.gross_area = null;
-              unit.value.polygon_edited_timestamp = Date.now();
-              unit.value.polygon_edited_by = "user"; // Placeholder for user identification
+              currentUnit.polygon = null;
+              currentUnit.gross_area = 0.0;
+              currentUnit.polygon_edited_timestamp = Date.now();
+              currentUnit.polygon_edited_by = "user"; // Placeholder for user identification
               save();
               map.pm.addControls({ drawPolygon: true });
           } else {
@@ -150,19 +144,21 @@
       });
 
       // Store the user preference for the last selected base layer
-      map.on('baselayerchange', e => {
-        Object.keys(baseLayers).forEach(function(key) {
-          if (map.hasLayer(baseLayers[key])) {
-            console.log('save active_layer: ' + key);
-            localStorage.setItem('active_layer', JSON.stringify(key));
-          }
-        })
+      map.on('baselayerchange', (e: L.LayersControlEvent) => {
+        // Object.keys(baseLayers).forEach(function(key) {
+        //   if (map.hasLayer(baseLayers[key])) {
+        //     console.log('save active_layer: ' + key);
+        //     localStorage.setItem('active_layer', JSON.stringify(key));
+        //   }
+        // })
+        localStorage.setItem('active_layer', JSON.stringify(e.name));
       })
   };
 
   onMounted(async () => {
       emit('update-title', 'Unit');
-      unit.value = await dbGet('units', props.navData.uid);
+      const data = await dbGet('units', props.navData.uid);
+      unit.value = data as Unit;
       setTimeout(initMap, 50); // delay to ensure element mounts
   });
 
@@ -191,11 +187,41 @@
   };
 
   const exportCSV = () => {
-    if (!unit.value) return; // Check if unit.value exists
+    const currentUnit = unit.value;
+
+    if (!currentUnit) return; // Check if unit.value exists
+
     let rows=["unit,project,plot,design,tree,condition,species,count,diameter,form_point,form_factor,tdf,bole_height,total_height,crown_ratio,position,damage_1,severity_1,damage_2,severity_2,log_number,grade,bole_height,length,small_diam,large_diam,def_type,def_amt,gross_cuft,gross_bdft,net_cuft,net_bdft"];
-    (unit.value.plots || []).forEach(pl=>{ (pl.trees || []).forEach(t=>{ if (t.logs && t.logs.length > 0) { t.logs.forEach(l=>{ rows.push([unit.value.name,unit.value.project_name,pl.name,pl.crew,t.designCode,t.number,t.condition,t.species,t.count,t.diameter,t.form_point,t.form_factor,t.tdf,t.bole_height,t.total_height,t.crown_ratio,t.position,t.damage_1,t.severity_1,t.damage_2,t.severity_2,l.number,l.grade,l.bole_height,l.length,l.small_diam,l.large_diam,l.def_type,l.def_amt,l.gross_cuft,l.gross_bdft,l.net_cuft,l.net_bdft].join(",")); }); } else { rows.push([unit.value.name,unit.value.project_name,pl.name,pl.crew,t.designCode,t.number,t.condition,t.species,t.count,t.diameter,t.form_point,t.form_factor,t.tdf,t.bole_height,t.total_height,t.crown_ratio,t.position,t.damage_1,t.severity_1,t.damage_2,t.severity_2,"","","","","","","","","","",""].join(",")); } }); });
+    (currentUnit.plots || []).forEach(pl=>{ 
+      (pl.trees || [] as Tree[]).forEach(t=>{ 
+        if (t.segments && t.segments.length > 0) { 
+          t.segments.forEach(l=>{ 
+            rows.push([
+              currentUnit.name,currentUnit.project_name,
+              pl.plot_num,pl.crew,t.designCode,t.number,t.condition,
+              t.species,t.count,t.diameter,t.form_point,
+              t.form_factor,t.tdf,t.bole_height,t.total_height,
+              t.crown_ratio,t.position,t.damage_1,t.severity_1,
+              t.damage_2,t.severity_2,l.position,l.grade,l.bole_height,
+              l.length,l.small_diam,l.large_diam,l.def_type,l.def_amt,
+              l.gross_cuft,l.gross_bdft,l.net_cuft,l.net_bdft
+            ].join(",")); 
+          }); 
+        } else { 
+          rows.push([
+            currentUnit.name,currentUnit.project_name,
+            pl.plot_num,pl.crew,t.designCode,t.number,t.condition,
+            t.species,t.count,t.diameter,t.form_point,t.form_factor,
+            t.tdf,t.bole_height,t.total_height,t.crown_ratio,t.position,
+            t.damage_1,t.severity_1,t.damage_2,t.severity_2,
+            "","","","","","","","","","",""
+          ].join(",")); 
+        } 
+      }); 
+    });
     download(rows.join("\n"), "inventory.csv");
   };
+
 </script>
 
 <style scoped>

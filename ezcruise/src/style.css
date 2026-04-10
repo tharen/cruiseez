@@ -63,18 +63,6 @@ td { border:1px solid #ccc; padding:2px; text-align:center; position: relative;}
   /* background: #c04e02; */
 }
 
-.push-right { margin-left: auto;}
-/*
-.map {
-  display: flex;
-  /* box-sizing: border-box;
-  height:80dvh; */
-  flex-grow: 1;
-  width:100%; 
-  margin-top:2px; 
-}
-*/
-
 .hidden { display:none; }
 
 /* Input styling for spreadsheet tables */

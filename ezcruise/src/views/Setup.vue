@@ -1,11 +1,8 @@
 <script setup lang="ts">
 
-// defineOptions({
-//   name: 'SetupView'
-// })
-
 import { ref, onMounted } from 'vue';
 import { getSetup, saveSetup } from '../db.ts';
+import type { Setup } from '../types/api.ts';
 
 const props = defineProps(['navData'])
 const emit = defineEmits(['update-title','nav'])
@@ -15,18 +12,18 @@ const gpsAvgTime = ref(5);
 
 onMounted(async () => {
   emit('update-title', 'Setup');
-  const setup = await getSetup();
+  const setup = await getSetup() as Setup;
   
   if (setup) {
-    userName.value = setup.userName || '';
-    gpsAvgTime.value = setup.gpsAvgTime || 5;
+    userName.value = setup.user_name || '';
+    gpsAvgTime.value = setup.gps_avg_time || 5;
   }
 });
 
 const save = async () => {
   await saveSetup({
-    userName: userName.value,
-    gpsAvgTime: parseInt(gpsAvgTime.value, 10),
+    user_name: userName.value,
+    gps_avg_time: gpsAvgTime.value,
   });
   alert('Settings saved!');
 };

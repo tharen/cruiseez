@@ -2,7 +2,7 @@ name: Deploy Vue to GitHub Pages
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "dev" ]
 
 permissions:
   contents: read
@@ -12,9 +12,7 @@ permissions:
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./ezcruise
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,16 +23,20 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm install
+      - name: Build ezcruise
+        run: |
+          npm install
+          cd ezcruise
+          npm install && npm run build
+          cd ..
+          mkdir -p deploy/ezcruise
+          cp -r ezcruise/dist/* deploy/ezcruise/
 
-      - name: Build project
-        run: npm run build
 
       - name: Upload artifact
         uses: [actions/upload-pages-artifact](https://github.com)@v3
         with:
-          path: './dist' # Ensure this matches your Vite build output directory
+          path: './deploy' # Ensure this matches your Vite build output directory
 
       - name: Deploy to GitHub Pages
         id: deployment

@@ -10,7 +10,16 @@ import Trees from './views/Trees.vue'
 import TreesCard from './views/TreesCard.vue'
 import Segments from './views/Segments.vue'
 
-const nav = ref({ view: "units", prev: null });
+interface NavigationState {
+  view: string;
+  // 'prev' can be another NavigationState or null
+  prev: NavigationState | null;
+}
+
+const nav = ref<NavigationState>({
+    view: "units",
+    prev: null 
+});
 const title = ref("Units");
 const dbReady = ref(false);
 
@@ -36,7 +45,7 @@ const currentComponent = computed(() => {
     }
 });
 
-const navigate = (newNav) => {
+const navigate = (newNav: Pick<NavigationState, 'view'>) => {
     nav.value = { ...newNav, prev: nav.value };
 };
 
@@ -47,6 +56,11 @@ const goBack = () => {
 const openSetup = () => {
     navigate({ view: 'setup' });
 };
+
+const openAbout = () => {
+    navigate({ view: 'about' });
+};
+
 </script>
 
 <template>

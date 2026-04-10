@@ -1,22 +1,33 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { dbPut, dbGet, debounce, uid } from '../db.ts';
+import type { Unit } from '../types/api.ts'
 
 const props = defineProps(['navData'])
 const emit = defineEmits(['update-title','nav'])
 const save = debounce(() => { if (unit.value) dbPut("units", JSON.parse(JSON.stringify(unit.value))); }, 500);
 
-const unit = ref(null);
+const unit = ref<Unit>();
 
 onMounted(async () => {
   emit('update-title', 'Sample Designs');
-  unit.value = await dbGet('units', props.navData.uid);
+  unit.value = await dbGet('units', props.navData.uid) as Unit;
   if (!unit.value.designs) unit.value.designs = [];
 });
 
-const addDesign = () => { unit.value.designs.push({uid:uid(), code:"", method:"", size:"", description:""}); save(); };
-const delDesign = (designId) => {
-  if (confirm("Delete design?")) { unit.value.designs = unit.value.designs.filter(d => d.uid !== designId); save(); }
+const addDesign = (): void => {
+  if (!unit.value) return;
+  unit.value.designs.push({
+    uid:uid(), code:"", method:"", size:1.0, description:"", form_point: 4.0
+  }); 
+  save(); 
+};
+const delDesign = (designId: string): void => {
+  if (!unit.value) return;
+  if (confirm("Delete design?")) {
+    unit.value.designs = unit.value.designs.filter(d => d.uid !== designId);
+    save();
+  }
 };
 </script>
 
