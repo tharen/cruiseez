@@ -33,7 +33,7 @@ jobs:
           cd ezcruise
           npm install && npm run build
           cd ..
-          mkdir -p deploy/ezcruise
+          mkdir -p deploy/timber/$APP_PREFIX
           cp -r ezcruise/dist/* deploy/timber/$APP_PREFIX/
         
       - name: Upload artifact
