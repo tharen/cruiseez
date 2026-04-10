@@ -1,10 +1,10 @@
 import { defineConfig, searchForWorkspaceRoot  } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
-import pkg from './package.json' assert { type: 'json' };
+import pkg from './package.json';
 
 // https://vite.dev/config/
-export default defineConfig(({ command, mode }) => {
+export default defineConfig(({ command }) => {
   // 'serve' is used for local dev, 'build' for production builds
   // TODO: get version from git tags
   const major_ver = JSON.stringify(pkg.version.split('.')[0]);
