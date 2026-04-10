@@ -33,8 +33,8 @@ jobs:
           cd ezcruise
           npm install && npm run build
           cd ..
-          mkdir -p deploy/timber/$APP_PREFIX
-          cp -r ezcruise/dist/* deploy/timber/$APP_PREFIX/
+          mkdir -p deploy/timber/app_v3
+          cp -r ezcruise/dist/* deploy/timber/app_v3/
         
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4.0.0
