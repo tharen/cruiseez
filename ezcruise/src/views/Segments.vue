@@ -30,8 +30,10 @@ onMounted(async () => {
 const addLog = (): void => { 
   const currentTree = tree.value;
   if (!currentTree) return;
+  const nextPos = Math.max(...currentTree.segments.map(seg => seg.position)) + 1;
+  const lastLog = currentTree.segments[currentTree.segments.length-1];
   currentTree.segments.push({
-  uid:uid(),position:0,length:0.0,sort:"",grade:"",
+  uid:uid(),position:nextPos,length:0.0,sort:lastLog.sort,grade:"",
   def_type:"",def_amt:0,bole_height:0.0,
   small_diam:0.0,large_diam:0.0,
   gross_cuft:0.0,gross_bdft:0.0,
