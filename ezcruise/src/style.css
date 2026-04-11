@@ -1,7 +1,7 @@
 body {
   margin:0;
   font-family:system-ui,sans-serif;
-  background:#505050; 
+  background:#2f2f2f; 
   /* max-width: 800px;  */
   /* Center the container horizontally */
   margin-left: auto;
@@ -39,7 +39,7 @@ main {
 /* view {
   flex: 1;
 } */
-.card { background:#b1b1b1; padding: 4px 4px 0px 4px; border-radius:0px; margin-bottom:0px; border:0px solid #ddd; }
+.card { background:#d6d6d6; padding: 4px 4px 0px 4px; border-radius:0px; margin-bottom:0px; border:0px solid #ddd; }
 .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:2px; }
 .flex-row { display: flex; gap: 2px; }
 button { margin: 2px; margin-bottom: 6px; padding:4px; border:none; border-radius:0px; background:#4f8f6f; color:#fff; cursor:pointer; }

@@ -68,7 +68,7 @@ const delTree = (treeId: string): void => {
           <th>SD</th><th>#</th><th>Cond</th><th>Species</th><th>Cnt</th><th>Diam</th>
           <th>FP</th><th>FF</th><th>TDF</th><th>Bole Ht</th><th>Tot Ht</th>
           <th>CR</th><th>Pos</th><th>Dmg-1</th><th>Sev-1</th><th>Dmg-2</th><th>Sev-2</th>
-          <th>Logs</th><th>❌</th>
+          <th>Notes</th><th>Segs</th><th>❌</th>
         </tr>
       </thead>
       <tbody>

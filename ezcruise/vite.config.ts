@@ -3,10 +3,8 @@ import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 import pkg from './package.json';
 
-// https://vite.dev/config/
 export default defineConfig(({ command }) => {
   // 'serve' is used for local dev, 'build' for production builds
-  // TODO: get version from git tags
   const major_ver = pkg.version.split('.')[0];
   const minor_ver = pkg.version.split('.')[1];
   const patch_ver = pkg.version.split('.')[2];
@@ -17,7 +15,12 @@ export default defineConfig(({ command }) => {
     base: root,
     plugins: [
       vue(),
-      VitePWA({ registerType: 'autoUpdate' })
+      VitePWA({
+        registerType: 'autoUpdate',
+        devOptions: {
+          enabled: true
+        }
+      })
     ],
     server: {
       fs: {

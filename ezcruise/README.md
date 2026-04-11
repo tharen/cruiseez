@@ -1,5 +1,22 @@
-# Vue 3 + TypeScript + Vite
+# EZ Cruise - Timber
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+An offline first application for collecting timber cruise data.
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+The app is designed to be installed as a progressive web app (PWA)
+so that it can be using in conditions that are completely offline.
+
+All data is stored locally.
+
+Roadmap
+----
+- Manual project file import and export to facilitate in field sycronization among users
+- GPS point collection view providing realtime positional accuracy assessment, point averaging, and outlier filtering
+- Plot layout tool to allow users to design planned data collection points within a unit polygon
+- Species lookup table with taper coefficients and bark factors
+- Custom pick list and number pad to minimize the need for on screen keyboard use
+- Improved layout for various device screen sizes
+- Pickable themes to improve readabilty in various lighting conditions
+- Unit, plot, tree rollups for basic forest biometrics
+- Syncronization with ESRI AGOL feature service
+- Implement project templates, which are simply pre-populated unit records with sample designs and species lookups
+- Look features from edit, unit polygons, planned plot locations, sample designs, species lookups

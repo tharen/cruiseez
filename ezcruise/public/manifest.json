@@ -1,6 +1,6 @@
 {
-  "name": "EZ Cruise",
-  "short_name": "EZ Cruise",
+  "name": "EZ Cruise - Timber",
+  "short_name": "EZ Timber",
   "description": "An offline focused application for forest inventory and cruising.",
   "id": "ezcruise-app-v3",
   "start_url": "./index.html",
