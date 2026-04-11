@@ -3,7 +3,6 @@
   TODO: Implement Species options prop
   TODO: Position options
   TODO: Validation rules, CR<=100, unreasonable ht(dbh)
-  TODO: Get defaultFormPoint from the sample design for the tree
  -->
 
 <script setup lang="ts">
@@ -33,15 +32,16 @@ onMounted(async () => {
   plot.value = currentUnit.plots.find(pl => pl.uid === props.navData.plotId);
 });
 
-
 const addTree = (): void => {
   const currentPlot = plot.value;
   if (!currentPlot) return;
-  const nextTree = 0;
+  // currentUnit.plots.find(pl => pl.uid === props.navData.plotId);
+  const nextNum = Math.max(...currentPlot.trees.map(tree => tree.number)) + 1;
+  const lastTree = currentPlot.trees[currentPlot.trees.length-1];
   currentPlot.trees.push({ 
-    uid:uid(), number:nextTree, condition: "", designCode: "", 
-    species:"", count:1, diameter:-1.0, form_point: defaultFormPoint, form_factor: -1, 
-    tdf: "", bole_height: -1, total_height: -1, crown_ratio: -1, position: "",
+    uid:uid(), number:nextNum ?? 1, condition: lastTree.condition ?? "", designCode: lastTree.designCode ?? "", 
+    species:lastTree.species ?? "", count:1, diameter:-1.0, form_point: lastTree.form_point ?? defaultFormPoint, form_factor: -1, 
+    tdf: lastTree.tdf ?? "", bole_height: -1, total_height: -1, crown_ratio: -1, position: "",
     damage_1: "", severity_1: 0.0, damage_2: "", severity_2: 0.0, segments:[],
     notes: "", total_cuft: 0.0, gross_cuft: 0.0, net_cuft: 0.0, gross_bdft: 0.0, net_bdft: 0.0,
     defect: 0.0

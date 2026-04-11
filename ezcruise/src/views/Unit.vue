@@ -271,11 +271,11 @@
           <label>Project ID</label>
         </div>
         <div class="floating-label">
-          <input placeholder=" " v-model="unit.gross_area" readonly>
+          <input placeholder=0.0 v-model="unit.gross_area" type="number" inputmode="decimal" step="0.1" readonly>
           <label>Gross Area</label>
         </div>
         <div class="floating-label">
-          <input placeholder=" " v-model="unit.net_area" @input="save">
+          <input placeholder=" " v-model="unit.net_area" type="number" inputmode="decimal" step="0.1" @input="save">
           <label>Net Area</label>
         </div>
       </div>

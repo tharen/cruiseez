@@ -19,9 +19,10 @@ onMounted(async () => {
 const addPlot = () => {
   // TODO: Auto increment plot_num, copy crew from previous plot
   if (!unit.value) return;
-  const nextPlot = 0;
+  const nextPlot = Math.max(...unit.value.plots.map(plot => plot.plot_num)) + 1;
+  const nextCrew = unit.value.plots[unit.value.plots.length-1].crew;
   unit.value.plots.push({
-    uid: uid(), plot_num:nextPlot, crew:"", status:"Planned",
+    uid: uid(), plot_num:nextPlot, crew:nextCrew, status:"Planned",
     slope: 0.0, aspect: 0.0, elevation: 0.0, notes: "",
     planned_lat: 0.0, planned_lon: 0.0, 
     gps_lat: 0.0, gps_lon: 0.0, gps_accuracy: 0.0,
@@ -113,6 +114,7 @@ const getGPS = (plot: Plot) => {
 
 <template>
 <div v-if="unit">
+  <div class="">
   <div v-for="plot in unit.plots" :key="plot.uid" class="card">
     <div class="flex-row">
       <div class="floating-label">
@@ -127,8 +129,6 @@ const getGPS = (plot: Plot) => {
         <input placeholder=" " v-model="plot.status" @input="save">
         <label>Status</label>
       </div>
-    </div>
-    <div class="flex-row">
       <div class="floating-label">
         <input placeholder=" " v-model="plot.slope" @input="save">
         <label>Slope (%)</label>
@@ -178,6 +178,7 @@ const getGPS = (plot: Plot) => {
       <button class="secondary" @click="getGPS(plot)">Get GPS</button>
       <button class="danger push-right" @click="delPlot(plot.uid)">Delete</button>
     </div>
+  </div>
   </div>
   <button @click="addPlot">+ Add Plot</button>
 </div>

@@ -25,22 +25,17 @@ const addUnit = async () => {
 
 <template>
   <div>
-    <div class="grid">
+    <div class="">
       <div v-for="u in units" :key="u.uid" class="card" @click="$emit('nav', {view:'unit', uid:u.uid})" style="cursor: pointer;">
-        <div class="grid">
-          <div>
-            <h3>Project: {{ u.project_name || '<project>' }}</h3>
-            <h3>Unit: {{ u.name || '<unit>' }}</h3>
-            <!--<h3>UID: {{ u.uid || '<uid>' }}</h3>-->
-            <small>{{ u.net_area || '--' }} acres | {{ u.plots ? u.plots.length : 0 }} plots</small>
-          </div>
-      
-          <div class="actions">
-            <button @click="$emit('nav', {view:'plots', uid:u.uid})">Plots</button>
-            <button @click="$emit('nav', {view:'designs', uid:u.uid})">Design</button>
-          </div>
+        <div class="">
+          <h3>Project: {{ u.project_name || '<project>' }}</h3><h3>Unit: {{ u.name || '<unit>' }}</h3>
+          <!--<h3>UID: {{ u.uid || '<uid>' }}</h3>-->
+          <small>{{ u.net_area || '--' }} acres | {{ u.plots ? u.plots.length : 0 }} plots</small>
         </div>
-
+        <div class="actions">
+          <button @click="$emit('nav', {view:'plots', uid:u.uid})">Plots</button>
+          <button @click="$emit('nav', {view:'designs', uid:u.uid})">Design</button>
+        </div>
       </div>
     </div>
     <button @click="addUnit">+ New Unit</button>

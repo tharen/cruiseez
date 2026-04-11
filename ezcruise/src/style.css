@@ -39,10 +39,10 @@ main {
 /* view {
   flex: 1;
 } */
-.card { background:#d6d6d6; padding: 4px 4px 0px 4px; border-radius:0px; margin-bottom:0px; border:0px solid #ddd; }
+.card { background:#adadad; padding: 4px 4px 0px 4px; border-radius:0px; margin-bottom:1px; border:0px solid #ddd; }
 .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:2px; }
-.flex-row { display: flex; gap: 2px; }
-button { margin: 2px; margin-bottom: 6px; padding:4px; border:none; border-radius:0px; background:#4f8f6f; color:#fff; cursor:pointer; }
+.flex-row { display: flex; flex-wrap: wrap; gap: 2px; }
+button { margin: 4px; padding:6px; border:none; border-radius:0px; background:#2f6f4e; color:#fff; cursor:pointer; }
 button.danger { background:#c0392b; }
 button.secondary { background:#777; }
 .table-button { padding:0px 0px; border:none; background-color:transparent; color:#333; cursor:pointer; font-size: x-small}
@@ -139,3 +139,8 @@ td { border:1px solid #ccc; padding:2px; text-align:center; position: relative;}
 
 /* Change the background color of the dropdown button when the dropdown content is shown */
 .dropdown:hover .dropbtn {background-color: #3e8e41;}
+
+.form-group {
+  background-color: #d6d6d6;
+  padding: 4px;
+}
