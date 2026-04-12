@@ -19,10 +19,6 @@
   let drawnItems: L.FeatureGroup;
   let home = { lat: 44.2, lng: -120.5583, zoom: 7}
 
-  const save = debounce(() => {
-      if (unit.value) dbPut("units", JSON.parse(JSON.stringify(unit.value)));
-  }, 500);
-
   const initMap = () => {
       const currentUnit = unit.value;
       if (!currentUnit) return;
@@ -222,6 +218,20 @@
     download(rows.join("\n"), "inventory.csv");
   };
 
+  const validate = (e: Event) => {
+    const targ = e.target as HTMLInputElement
+    if (!targ) return;
+    const name = targ.name;
+    // console.log(name);
+    if (name==='net_area'){
+      targ.value = targ.value;
+    }
+  }
+
+  const save = debounce(() => {
+    if (unit.value) dbPut("units", JSON.parse(JSON.stringify(unit.value)));
+  }, 500);
+
 </script>
 
 <style scoped>
@@ -259,23 +269,30 @@
     <div class="unit-detail">
       <div class="flex-row">
         <div class="floating-label">
-          <input placeholder=" " v-model="unit.name" @input="save">
+          <input placeholder=" " v-model.trim="unit.name" @input="save">
           <label>Unit</label>
         </div>
         <div class="floating-label">
-          <input placeholder=" " v-model="unit.project_name" @input="save">
+          <input placeholder=" " v-model.trim="unit.project_name" @input="save">
           <label>Project</label>
         </div>
         <div class="floating-label">
-          <input placeholder=" " v-model="unit.project_id" @input="save">
+          <input placeholder=" " v-model.trim="unit.project_id" @input="save">
           <label>Project ID</label>
         </div>
         <div class="floating-label">
-          <input placeholder=0.0 v-model="unit.gross_area" type="number" inputmode="decimal" step="0.1" readonly>
+          <input placeholder=0.0 v-model.number="unit.gross_area" type="text" pattern="\d*\.\d" readonly>
           <label>Gross Area</label>
         </div>
         <div class="floating-label">
-          <input placeholder=" " v-model="unit.net_area" type="number" inputmode="decimal" step="0.1" @input="save">
+          <input
+            placeholder="0.0"
+            v-model.number="unit.net_area"
+            name="net_area"
+            pattern="\d{1,3}.\d{1,2}"
+            @input="validate"
+            @blur="save"
+            >
           <label>Net Area</label>
         </div>
       </div>
@@ -288,9 +305,11 @@
     <div class="actions">
       <button @click="$emit('nav', {view:'plots', uid:unit.uid})">Plots</button>
       <button @click="$emit('nav', {view:'designs', uid:unit.uid})">Designs</button>
-      <button @click="exportJSON">Export JSON</button>
-      <button @click="exportCSV">Export CSV</button>
-      <button class="danger push-right" @click="del">Delete</button>
     </div>
+    <Teleport to="#teleport-menu">
+      <a href="#" @click="exportJSON">Export JSON</a>
+      <a href="#" @click="exportCSV">Export CSV</a>
+      <a href="#" class="danger push-right" @click="del">Delete Unit</a>
+    </Teleport>
 </div>
 </template>
