@@ -1,13 +1,20 @@
+html {
+  margin: 0;
+  padding: 0;
+  height: 100dvh;
+}
+
 body {
-  margin:0;
+  margin: 0;
+  padding: 0;
+  height: 100dvh;
   font-family:system-ui,sans-serif;
   background:#2f2f2f; 
   /* max-width: 800px;  */
   /* Center the container horizontally */
-  margin-left: auto;
-  margin-right: auto;
+  /* margin-left: auto; */
+  /* margin-right: auto; */
 
-  height: 100%;
   /* display: flex;
   flex-direction: column; */
   /* min-height: 100dvh; */
@@ -21,52 +28,42 @@ header {
   align-items: center;
   gap:8px; 
   justify-content: space-between; 
-  height: 40px;
+  height: 7dvh;
 }
 header strong { display: flex; justify-content: space-between; align-items: center;}
 header button { background: none; border:none; color:#fff; padding:0px; border-radius:0px; }
 .app-container {
-  min-height: 100vh;
+  min-height: 100%;
 }
 main {
   padding: 0px;
   display: flex;
   flex-direction: column;
-  /* height: 100vh; */
+  height: 93dvh;
+  overflow-y: auto;
   /* background: #505050; */
   /* flex: 1; */
 }
-/* view {
-  flex: 1;
-} */
-.card { background:#adadad; padding: 4px 4px 0px 4px; border-radius:0px; margin-bottom:1px; border:0px solid #ddd; }
+.card { background:#cccccc; padding: 4px 4px 0px 4px; border-radius:0px; margin-bottom:1px; border:0px solid #ddd; }
 .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:2px; }
 .flex-row { display: flex; flex-wrap: wrap; gap: 2px; }
 button { margin: 4px; padding:6px; border:none; border-radius:0px; background:#2f6f4e; color:#fff; cursor:pointer; }
 button.danger { background:#c0392b; }
 button.secondary { background:#777; }
 .table-button { padding:0px 0px; border:none; background-color:transparent; color:#333; cursor:pointer; font-size: x-small}
-input {border: 0px solid; }
+input, select {border: 0px solid; }
 input, textarea { border: 0px solid; box-sizing: border-box; width:100%; margin:4px 0; padding:2px; }
-input:read-only { border: 0px solid; background-color: #e3e3e3; cursor: not-allowed;}
+input:read-only { border: 0px solid; background-color: #eeeeee; cursor: not-allowed;}
 table { width:100%; border-collapse:collapse; font-size: small; background:#e2e2e2}
 th { border:1px solid #ccc; padding:2px; text-align:center; }
 td { border:1px solid #ccc; padding:2px; text-align:center; position: relative;}
-
-.actions {
-  flex-shrink: 0; /* Prevent header/footer from collapsing */
-  padding: 2px 2px 0px 2px;
-  gap: 6px;
-  margin: 0px;
-  /* height: 100px; */
-  flex-wrap:wrap;
-  /* background: #c04e02; */
-}
 
 .hidden { display:none; }
 
 /* Input styling for spreadsheet tables */
 .cell-input { border: none; background: transparent; padding: 0; outline: none; margin: 0; font-family: inherit; font-size: inherit; }
+select.cell-input:read-only { background-color: transparent; cursor: not-allowed;}
+.cell-input:read-only { background-color: #cccccc; cursor: not-allowed;}
 
 /* Floating Labels */
 .floating-label { position: relative; flex: 1; display: flex; min-width: 40px; margin: 1px 0; }

@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { dbGetAll, dbAdd, uid } from '../db.ts';
 import type { Unit } from '../types/api.ts';
+import { defaultSpecies } from '../db.ts';
 
 const emit = defineEmits(['update-title','nav'])
 
@@ -17,11 +18,21 @@ onMounted(() => {
 });
 
 const addUnit = async () => {
-    await dbAdd("units", { uid: uid(), name: "", project_id: "", project_name: "", gross_area: "", net_area: "", notes: "", polygon: null, polygon_edited_timestamp: null, polygon_edited_by: "", plots: [], designs: [] });
+    await dbAdd("units", {
+      uid: uid(), name: "", project_id: "", project_name: "", 
+      gross_area: "", net_area: "", notes: "", 
+      polygon: null, polygon_edited_timestamp: null, polygon_edited_by: "", 
+      plots: [], designs: [], species: { ...defaultSpecies } });
     load();
 };
 
 </script>
+
+<style scoped>
+  .card {
+    background: #eeeeee;
+  }
+</style>
 
 <template>
   <div>

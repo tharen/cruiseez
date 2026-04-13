@@ -44,6 +44,12 @@ export interface Unit {
   polygon_edited_by: string;
   plots: Plot[];
   designs: Design[];
+  species: Species[];
+}
+
+export interface Species {
+  code: string;
+  name: string;
 }
 
 export interface Tree {

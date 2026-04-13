@@ -23,18 +23,30 @@ onMounted(async () => {
 const addTree = (): void => {
   const currentPlot = plot.value;
   if (!currentPlot) return;
-  const nextNum = Math.max(...currentPlot.trees.map(tree => tree.number)) + 1;
+  
+  let nextNum = Math.max(...currentPlot.trees.map(tree => tree.number)) + 1;
+  nextNum = Number.isFinite(nextNum) ? nextNum : 1;
   const lastTree = currentPlot.trees[currentPlot.trees.length-1];
+
   currentPlot.trees.push({ 
-    uid:uid(), number:nextNum ?? 1, condition: lastTree.condition ?? "", designCode: lastTree.designCode ?? "", 
-    species:lastTree.species ?? "", count:1, diameter:-1.0, form_point: lastTree.form_point ?? defaultFormPoint, form_factor: -1, 
-    tdf: lastTree.tdf ?? "", bole_height: -1, total_height: -1, crown_ratio: -1, position: "",
+    uid:uid(),
+    number:nextNum,
+    condition: lastTree?.condition ?? "",
+    designCode: lastTree?.designCode ?? "", 
+    species:lastTree?.species ?? "",
+    count:1,
+    diameter:-1.0,
+    form_point: lastTree?.form_point ?? defaultFormPoint,
+    form_factor: -1, 
+    tdf: lastTree?.tdf ?? "",
+    bole_height: -1, total_height: -1, crown_ratio: -1, position: "",
     damage_1: "", severity_1: 0.0, damage_2: "", severity_2: 0.0, segments:[],
     notes: "", total_cuft: 0.0, gross_cuft: 0.0, net_cuft: 0.0, gross_bdft: 0.0, net_bdft: 0.0,
     defect: 0.0
   });
   save();
 }
+
 
 const delTree = (treeId: string) => {
   const currentPlot = plot.value;
@@ -56,33 +68,33 @@ const delTree = (treeId: string) => {
         <option v-for="d in (unit.designs || [])" :key="d.uid" :value="d.code">{{ d.code }}</option>
       </select>
       <div class="floating-label">
-        <input placeholder=" " v-model="tree.number" @input="save"></input>
+        <input placeholder=" " v-model="tree.number" @input="save" type="number"></input>
         <label>Tree</label>
       </div>
       <div class="floating-label">
-        <input placeholder=" " v-model="tree.condition" @input="save"></input>
+        <input placeholder=" " v-model="tree.condition" @input="save" onfocus="this.select()"></input>
         <label>Cond</label>
       </div>
       <div class="floating-label">
-        <input placeholder=" " v-model="tree.species" @input="save"></input>
+        <input placeholder=" " v-model="tree.species" @input="save" onfocus="this.select()"></input>
         <label>Species</label>
       </div>
       <div class="floating-label">
-        <input placeholder=" " v-model="tree.count" @input="save"></input>
+        <input placeholder=" " v-model="tree.count" @input="save" type="number" onfocus="this.select()"></input>
         <label>Count</label>
       </div>
       <div class="floating-label">
-        <input placeholder=" " v-model="tree.diameter" @input="save"></input>
+        <input placeholder=" " v-model="tree.diameter" @input="save" type="number" onfocus="this.select()"></input>
         <label>Diameter</label>
       </div>
     </div>
     <div class="flex-row">
       <div class="floating-label">
-        <input placeholder=" " v-model="tree.form_point" @input="save"></input>
+        <input placeholder=" " v-model="tree.form_point" @input="save" type="number" onfocus="this.select()"></input>
         <label>Form Point</label>
       </div>
       <div class="floating-label">
-        <input placeholder=" " v-model="tree.form_factor" @input="save"></input>
+        <input placeholder=" " v-model="tree.form_factor" @input="save" type="number" onfocus="this.select()"></input>
         <label>Form Factor</label>
       </div>
       <div class="floating-label">
@@ -90,37 +102,37 @@ const delTree = (treeId: string) => {
         <label>TDF</label>
       </div>
       <div class="floating-label">
-        <input placeholder=" " v-model="tree.bole_height" @input="save"></input>
+        <input placeholder=" " v-model="tree.bole_height" @input="save" type="number" onfocus="this.select()"></input>
         <label>Bole Ht</label>
       </div>
       <div class="floating-label">
-        <input placeholder=" " v-model="tree.total_height" @input="save"></input>
+        <input placeholder=" " v-model="tree.total_height" @input="save" type="number" onfocus="this.select()"></input>
         <label>Total Ht</label>
       </div>
       <div class="floating-label">
-        <input placeholder=" " v-model="tree.crown_ratio" @input="save"></input>
+        <input placeholder=" " v-model="tree.crown_ratio" @input="save" type="number" onfocus="this.select()"></input>
         <label>Crown %</label>
       </div>
       <div class="floating-label">
-        <input placeholder=" " v-model="tree.position" @input="save"></input>
+        <input placeholder=" " v-model="tree.position" @input="save" onfocus="this.select()"></input>
         <label>Position</label>
       </div>
     </div>
     <div class="flex-row">
       <div class="floating-label">
-        <input placeholder=" " v-model="tree.damage_1" @input="save"></input>
+        <input placeholder=" " v-model="tree.damage_1" @input="save" onfocus="this.select()"></input>
         <label>Dmg-1</label>
       </div>
       <div class="floating-label">
-        <input placeholder=" " v-model="tree.severity_1" @input="save"></input>
+        <input placeholder=" " v-model="tree.severity_1" @input="save" type="number" onfocus="this.select()"></input>
         <label>Sev-1</label>
       </div>
       <div class="floating-label">
-        <input placeholder=" " v-model="tree.damage_2" @input="save"></input>
+        <input placeholder=" " v-model="tree.damage_2" @input="save" onfocus="this.select()"></input>
         <label>Dmg-2</label>
       </div>
       <div class="floating-label">
-        <input placeholder=" " v-model="tree.severity_2" @input="save"></input>
+        <input placeholder=" " v-model="tree.severity_2" @input="save" type="number" onfocus="this.select()"></input>
         <label>Sev-2</label>
       </div>
     </div>

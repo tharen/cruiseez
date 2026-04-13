@@ -18,11 +18,18 @@ onMounted(async () => {
 
 const addPlot = () => {
   // TODO: Auto increment plot_num, copy crew from previous plot
-  if (!unit.value) return;
-  const nextPlot = Math.max(...unit.value.plots.map(plot => plot.plot_num)) + 1;
-  const nextCrew = unit.value.plots[unit.value.plots.length-1].crew;
-  unit.value.plots.push({
-    uid: uid(), plot_num:nextPlot, crew:nextCrew, status:"Planned",
+  const currentUnit = unit.value;
+  if (!currentUnit) return;
+
+  const lastPlot = currentUnit.plots[currentUnit.plots.length-1];
+  
+  // const nextPlot = Math.max(...currentUnit.plots.map(plot => plot.plot_num)) || 0 + 1;
+  
+  currentUnit.plots.push({
+    uid: uid(),
+    plot_num:(lastPlot?.plot_num ?? 0) + 1,
+    crew:lastPlot?.crew ?? "",
+    status:"Planned",
     slope: 0.0, aspect: 0.0, elevation: 0.0, notes: "",
     planned_lat: 0.0, planned_lon: 0.0, 
     gps_lat: 0.0, gps_lon: 0.0, gps_accuracy: 0.0,
@@ -31,6 +38,7 @@ const addPlot = () => {
   });
   save();
 };
+
 const delPlot = (plotId: string) => {
   if (!unit.value) return;
   if (confirm("Delete plot?")) {
@@ -126,19 +134,19 @@ const getGPS = (plot: Plot) => {
         <label>Crew</label>
       </div>
       <div class="floating-label">
-        <input placeholder=" " v-model="plot.status" @input="save">
+        <input placeholder=" " v-model="plot.status" @input="save" onfocus="this.select()">
         <label>Status</label>
       </div>
       <div class="floating-label">
-        <input placeholder=" " v-model="plot.slope" @input="save">
+        <input placeholder=" " v-model="plot.slope" @input="save" onfocus="this.select()">
         <label>Slope (%)</label>
       </div>
       <div class="floating-label">
-        <input placeholder=" " v-model="plot.aspect" @input="save">
+        <input placeholder=" " v-model="plot.aspect" @input="save" onfocus="this.select()">
         <label>Aspect (deg)</label>
       </div>
       <div class="floating-label">
-        <input placeholder=" " v-model="plot.elevation" @input="save">
+        <input placeholder=" " v-model="plot.elevation" @input="save" onfocus="this.select()">
         <label>Elev (ft)</label>
       </div>
     </div>

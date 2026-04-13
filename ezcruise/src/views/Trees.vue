@@ -35,13 +35,23 @@ onMounted(async () => {
 const addTree = (): void => {
   const currentPlot = plot.value;
   if (!currentPlot) return;
-  // currentUnit.plots.find(pl => pl.uid === props.navData.plotId);
-  const nextNum = Math.max(...currentPlot.trees.map(tree => tree.number)) + 1;
+  
+  let nextNum = Math.max(...currentPlot.trees.map(tree => tree.number)) + 1;
+  nextNum = Number.isFinite(nextNum) ? nextNum : 1;
   const lastTree = currentPlot.trees[currentPlot.trees.length-1];
+
   currentPlot.trees.push({ 
-    uid:uid(), number:nextNum ?? 1, condition: lastTree.condition ?? "", designCode: lastTree.designCode ?? "", 
-    species:lastTree.species ?? "", count:1, diameter:-1.0, form_point: lastTree.form_point ?? defaultFormPoint, form_factor: -1, 
-    tdf: lastTree.tdf ?? "", bole_height: -1, total_height: -1, crown_ratio: -1, position: "",
+    uid:uid(),
+    number:nextNum,
+    condition: lastTree?.condition ?? "",
+    designCode: lastTree?.designCode ?? "", 
+    species:lastTree?.species ?? "",
+    count:1,
+    diameter:-1.0,
+    form_point: lastTree?.form_point ?? defaultFormPoint,
+    form_factor: -1, 
+    tdf: lastTree?.tdf ?? "",
+    bole_height: -1, total_height: -1, crown_ratio: -1, position: "",
     damage_1: "", severity_1: 0.0, damage_2: "", severity_2: 0.0, segments:[],
     notes: "", total_cuft: 0.0, gross_cuft: 0.0, net_cuft: 0.0, gross_bdft: 0.0, net_bdft: 0.0,
     defect: 0.0
@@ -80,21 +90,27 @@ const delTree = (treeId: string): void => {
             </select>
           </td>
           <td><input v-model="tree.number" @input="save" class="cell-input"></td>
-          <td><input v-model="tree.condition" @input="save" class="cell-input"></td>
-          <td><input v-model="tree.species" @input="save" class="cell-input"></td>
-          <td><input v-model="tree.count" @input="save" class="cell-input"></td>
-          <td><input v-model="tree.diameter" @input="save" class="cell-input"></td>
-          <td><input v-model="tree.form_point" @input="save" class="cell-input"></td>
-          <td><input v-model="tree.form_factor" @input="save" class="cell-input"></td>
-          <td><input v-model="tree.tdf" @input="save" class="cell-input"></td>
-          <td><input v-model="tree.bole_height" @input="save" class="cell-input"></td>
-          <td><input v-model="tree.total_height" @input="save" class="cell-input"></td>
-          <td><input v-model="tree.crown_ratio" @input="save" class="cell-input"></td>
+          <td><input v-model="tree.condition" @input="save" class="cell-input" onfocus="this.select()"></td>
+          <!-- <td><input v-model="tree.species" @input="save" class="cell-input" onfocus="this.select()"></td> -->
+          <td>
+            <select v-model="tree.species" @change="save" class="cell-input">
+              <option value=""></option>
+              <option v-for="s in (unit.species || [])" :key="s.code" :value="s.name">{{ s.code }}</option>
+            </select>
+          </td>
+          <td><input v-model="tree.count" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
+          <td><input v-model="tree.diameter" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
+          <td><input v-model="tree.form_point" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
+          <td><input v-model="tree.form_factor" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
+          <td><input v-model="tree.tdf" @input="save" class="cell-input" onfocus="this.select()"></td>
+          <td><input v-model="tree.bole_height" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
+          <td><input v-model="tree.total_height" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
+          <td><input v-model="tree.crown_ratio" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
           <td><input v-model="tree.position" @input="save" class="cell-input"></td>
-          <td><input v-model="tree.damage_1" @input="save" class="cell-input"></td>
-          <td><input v-model="tree.severity_1" @input="save" class="cell-input"></td>
-          <td><input v-model="tree.damage_2" @input="save" class="cell-input"></td>
-          <td><input v-model="tree.severity_2" @input="save" class="cell-input"></td>
+          <td><input v-model="tree.damage_1" @input="save" class="cell-input" onfocus="this.select()"></td>
+          <td><input v-model="tree.severity_1" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
+          <td><input v-model="tree.damage_2" @input="save" class="cell-input" onfocus="this.select()"></td>
+          <td><input v-model="tree.severity_2" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
           <td><input v-model="tree.notes" @input="save" class="cell-input"></td>
           <td><button class="table-button" @click="$emit('nav', {view:'segments', pid:unit.uid, plotId:plot.uid, treeId:tree.uid})">✎</button></td>
           <td><button class="table-button" @click="delTree(tree.uid)">❌</button></td>

@@ -30,11 +30,17 @@ onMounted(async () => {
 const addLog = (): void => { 
   const currentTree = tree.value;
   if (!currentTree) return;
-  const nextPos = Math.max(...currentTree.segments.map(seg => seg.position)) + 1;
+  let nextPos = Math.max(...currentTree.segments.map(seg => seg.position)) + 1;
+  nextPos = Number.isFinite(nextPos) ? nextPos : 1;
   const lastLog = currentTree.segments[currentTree.segments.length-1];
   currentTree.segments.push({
-  uid:uid(),position:nextPos,length:0.0,sort:lastLog.sort,grade:"",
-  def_type:"",def_amt:0,bole_height:0.0,
+  uid:uid(),position:nextPos,
+  length:0.0,
+  sort:lastLog?.sort ?? "",
+  grade:"",
+  def_type:"",
+  def_amt:0,
+  bole_height:0.0,
   small_diam:0.0,large_diam:0.0,
   gross_cuft:0.0,gross_bdft:0.0,
   net_cuft:0.0,net_bdft:0.0
@@ -84,12 +90,12 @@ const delLog = (logId: string) => {
         </thead>
         <tbody>
           <tr v-for="segment in tree.segments" :key="segment.uid">
-            <td><input v-model="segment.position" @input="save" class="cell-input"></td>
-            <td><input v-model="segment.length" @input="save" class="cell-input"></td>
-            <td><input v-model="segment.sort" @input="save" class="cell-input"></td>
-            <td><input v-model="segment.grade" @input="save" class="cell-input"></td>
-            <td><input v-model="segment.def_type" @input="save" class="cell-input"></td>
-            <td><input v-model="segment.def_amt" @input="save" class="cell-input"></td>
+            <td><input v-model="segment.position" @input="save" class="cell-input" type="number"></td>
+            <td><input v-model="segment.length" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
+            <td><input v-model="segment.sort" @input="save" class="cell-input" onfocus="this.select()"></td>
+            <td><input v-model="segment.grade" @input="save" class="cell-input" onfocus="this.select()"></td>
+            <td><input v-model="segment.def_type" @input="save" class="cell-input" onfocus="this.select()"></td>
+            <td><input v-model="segment.def_amt" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
             <td><input v-model="segment.bole_height" @input="save" class="cell-input" readonly></td>
             <td><input v-model="segment.small_diam" @input="save" class="cell-input" readonly></td>
             <td><input v-model="segment.large_diam" @input="save" class="cell-input" readonly></td>

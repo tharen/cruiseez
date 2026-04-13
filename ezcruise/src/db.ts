@@ -1,4 +1,4 @@
-import type { Setup } from './types/api';
+import type { Setup, Species } from './types/api';
 
 // 1. Define Store Name types for strict indexing
 type StoreName = 'units' | 'setup';
@@ -111,3 +111,15 @@ export async function getSetup(): Promise<Setup | undefined> {
 export async function saveSetup(setupData: Setup): Promise<IDBValidKey> {
   return dbPut<Setup>('setup', setupData, 'config');
 }
+
+// TODO: Put default species in a configuration location
+export const defaultSpecies: Species[] = [
+  {code:"DF", name:"Douglas-fir"},
+  {code:'WH', name:'Western hemlock'},
+  {code:'SS', name:'Sitka spruce'},
+  {code:'NF', name:'Noble fir'},
+  {code:'RA', name:'Red alder'},
+  {code:'BM', name:'Bigleaf maple'},
+  {code:'OC', name:'Other conifer'},
+  {code:'OH', name:'Other hardwood'},
+];

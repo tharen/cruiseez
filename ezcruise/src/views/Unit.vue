@@ -238,28 +238,22 @@
 .view {
   display: flex;
   flex-direction: column;
-  height: 90vh;
+  flex-grow: 1;
+  height: 100%;
   /* background: blue; */
 }
 
 .unit-detail {
-  flex-shrink: 0; /* Prevent header/footer from collapsing */
   padding: 0px;
   margin: 1px;
-  /* background: #e0e0e0; */
+  /* margin-bottom: 8px; */
+
+  background:#cccccc;
 }
 
 #map {
-  margin: 0px;
-  display: flex;
-  flex-direction: column;
   flex-grow: 1;
-  /* height: calc(100vh - 200px); */
   width: 100%;
-}
-
-.actions {
-  bottom: 0
 }
 
 </style>
