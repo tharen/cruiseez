@@ -43,7 +43,7 @@ const addUnit = async () => {
           <!--<h3>UID: {{ u.uid || '<uid>' }}</h3>-->
           <small>{{ u.net_area || '--' }} acres | {{ u.plots ? u.plots.length : 0 }} plots</small>
         </div>
-        <div class="actions">
+        <div class="actions" style="justify-content: flex-start">
           <button @click="$emit('nav', {view:'plots', uid:u.uid})">Plots</button>
           <button @click="$emit('nav', {view:'designs', uid:u.uid})">Design</button>
         </div>

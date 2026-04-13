@@ -134,7 +134,13 @@ const getGPS = (plot: Plot) => {
         <label>Crew</label>
       </div>
       <div class="floating-label">
-        <input placeholder=" " v-model="plot.status" @input="save" onfocus="this.select()">
+        <select v-model="plot.status" @change="save" onfocus="this.select()">
+          <option value="P">Planned</option>
+          <option value="C">Completed</option>
+          <option value="DR">Drop - Road</option>
+          <option value="DS">Drop - Safety</option>
+          <option value="DO">Drop - Out</option>
+        </select>
         <label>Status</label>
       </div>
       <div class="floating-label">
@@ -143,7 +149,7 @@ const getGPS = (plot: Plot) => {
       </div>
       <div class="floating-label">
         <input placeholder=" " v-model="plot.aspect" @input="save" onfocus="this.select()">
-        <label>Aspect (deg)</label>
+        <label>Aspect (&deg)</label>
       </div>
       <div class="floating-label">
         <input placeholder=" " v-model="plot.elevation" @input="save" onfocus="this.select()">
@@ -181,10 +187,12 @@ const getGPS = (plot: Plot) => {
       <label>Notes</label>
     </div>
     <div class="actions">
+      <div>
       <button @click="$emit('nav', {view:'trees', pid:unit.uid, plotId:plot.uid})">Trees</button>
-      <button @click="$emit('nav', {view:'trees-card', pid:unit.uid, plotId:plot.uid})">Trees-Card</button>
+      <!-- <button @click="$emit('nav', {view:'trees-card', pid:unit.uid, plotId:plot.uid})">Trees-Card</button> -->
       <button class="secondary" @click="getGPS(plot)">Get GPS</button>
-      <button class="danger push-right" @click="delPlot(plot.uid)">Delete</button>
+      </div>
+      <button class="danger" @click="delPlot(plot.uid)">X</button>
     </div>
   </div>
   </div>

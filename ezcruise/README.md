@@ -18,5 +18,9 @@ Roadmap
 - Pickable themes to improve readabilty in various lighting conditions
 - Unit, plot, tree rollups for basic forest biometrics
 - Syncronization with ESRI AGOL feature service
-- Implement project templates, which are simply pre-populated unit records with sample designs and species lookups
-- Look features from edit, unit polygons, planned plot locations, sample designs, species lookups
+- Implement project templates, which are simply pre-populated read-only unit records with sample designs and species lookups
+- Lock features from edit, unit polygons, planned plot locations, sample designs, species lookups
+- Add unit, plot, tree to view title
+- Auto focus tree and segment after add new
+- ~~Larger buttons, links, padding for finger input~~
+- More select options

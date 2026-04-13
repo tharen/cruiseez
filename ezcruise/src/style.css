@@ -29,9 +29,10 @@ header {
   gap:8px; 
   justify-content: space-between; 
   height: 7dvh;
+  font-size: medium;
 }
-header strong { display: flex; justify-content: space-between; align-items: center;}
-header button { background: none; border:none; color:#fff; padding:0px; border-radius:0px; }
+header strong { font-size: medium; display: flex; justify-content: space-between; align-items: center;}
+header button { font-size: medium; background: none; border:none; color:#fff; padding:0px 8px; border-radius:0px; }
 .app-container {
   min-height: 100%;
 }
@@ -44,10 +45,17 @@ main {
   /* background: #505050; */
   /* flex: 1; */
 }
+
+.actions {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+}
+
 .card { background:#cccccc; padding: 4px 4px 0px 4px; border-radius:0px; margin-bottom:1px; border:0px solid #ddd; }
 .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:2px; }
 .flex-row { display: flex; flex-wrap: wrap; gap: 2px; }
-button { margin: 4px; padding:6px; border:none; border-radius:0px; background:#2f6f4e; color:#fff; cursor:pointer; }
+button { font-size: medium; margin: 4px; padding:6px; border:none; border-radius:0px; background:#2f6f4e; color:#fff; cursor:pointer; }
 button.danger { background:#c0392b; }
 button.secondary { background:#777; }
 .table-button { padding:0px 0px; border:none; background-color:transparent; color:#333; cursor:pointer; font-size: x-small}
@@ -67,13 +75,30 @@ select.cell-input:read-only { background-color: transparent; cursor: not-allowed
 
 /* Floating Labels */
 .floating-label { position: relative; flex: 1; display: flex; min-width: 40px; margin: 1px 0; }
-.floating-label input, .floating-label textarea {
-  margin: 0; padding: 12px 2px 2px 2px; width: 100%; box-sizing: border-box; font-size: 12px;
+/* Inputs */
+.floating-label input,
+.floating-label select,
+.floating-label textarea
+{
+  margin: 0; padding: 14px 4px 4px 4px; width: 100%; box-sizing: border-box; font-size: 14px;
 }
-.floating-label label { position: absolute; top: 12px; left: 4px; color: #777; transition: 0.2s ease all; pointer-events: none; font-size: 12px; margin: 0; }
-.floating-label input:focus ~ label, .floating-label input:not(:placeholder-shown) ~ label,
-.floating-label textarea:focus ~ label, .floating-label textarea:not(:placeholder-shown) ~ label {
-  top: 1px; font-size: 8px; color: #2f6f4e; font-weight: bold;
+
+/* Placeholder when blurred and empty*/
+.floating-label label {
+  position: absolute; bottom: 4px; left: 4px; color: #777;
+  transition: 0.1s ease all; pointer-events: none;
+  font-size: 12px; margin: 0;
+}
+
+/* Label when focussed or blurred and filled */
+.floating-label input:focus ~ label,
+.floating-label input:not(:placeholder-shown) ~ label,
+.floating-label select:focus ~ label,
+.floating-label select:not(:placeholder-shown) ~ label,
+.floating-label textarea:focus ~ label,
+.floating-label textarea:not(:placeholder-shown) ~ label
+{
+  top: 0px; font-size: 10px; color: #2f6f4e; font-weight: bold;
 }
 
 .setup-view {
@@ -97,8 +122,8 @@ select.cell-input:read-only { background-color: transparent; cursor: not-allowed
 .dropdown-button {
   background: none;
   color: white;
-  padding: 0px 4px;
-  font-size: 14px;
+  padding: 0px 10px;
+  font-size: large;
   border: none;
 }
 
@@ -124,21 +149,22 @@ select.cell-input:read-only { background-color: transparent; cursor: not-allowed
 }
 
 /* Links inside the dropdown */
-.dropdown-content a {
+.dropdown-content a, span {
   color: black;
   padding: 4px 8px;
   text-decoration: none;
-  display: block;
+  display: flex;
+  align-items: center;
 }
 
 /* Change color of dropdown links on hover */
-.dropdown-content a:hover {background-color: #ddd;}
+.dropdown-content a:hover{background-color: #ddd;}
 
 /* Show the dropdown menu on hover */
 .dropdown:hover .dropdown-content {display: block;}
 
 /* Change the background color of the dropdown button when the dropdown content is shown */
-.dropdown:hover .dropbtn {background-color: #3e8e41;}
+.dropdown:hover .dropdown-button {background-color: #3e8e41;}
 
 .form-group {
   background-color: #d6d6d6;

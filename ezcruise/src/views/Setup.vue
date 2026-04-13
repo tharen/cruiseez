@@ -29,15 +29,23 @@ const save = async () => {
 };
 </script>
 
+<style scoped>
+.setup-view {
+  background-color: #cccccc;
+  width: 100%;
+  max-width: 300px;
+}
+</style>
+
 <template>
   <div class="setup-view">
-    <div class="form-group">
-      <label for="userName">User Name</label>
-      <input id="userName" type="text" v-model="userName">
+    <div class="floating-label">
+      <input placeholder=" " v-model="userName"></input>
+      <label>User Name</label>
     </div>
-    <div class="form-group">
-      <label for="gpsAvgTime">GPS Averaging Time (seconds)</label>
-      <input id="gpsAvgTime" type="number" v-model.number="gpsAvgTime">
+    <div class="floating-label">
+      <input placeholder=" " v-model="gpsAvgTime" type="number"></input>
+      <label>GPS Averaging Time (seconds)</label>
     </div>
     <button @click="save">Save</button>
   </div>

@@ -296,7 +296,7 @@
       </div>
     </div>
     <div id="map"></div>
-    <div class="actions">
+    <div class="actions" style="justify-content: flex-start">
       <button @click="$emit('nav', {view:'plots', uid:unit.uid})">Plots</button>
       <button @click="$emit('nav', {view:'designs', uid:unit.uid})">Designs</button>
     </div>

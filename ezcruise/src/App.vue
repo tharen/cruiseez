@@ -2,12 +2,12 @@
 import { ref,computed,onMounted } from 'vue'
 import { openDB } from './db.ts';
 import Setup from './views/Setup.vue'
+import About from './views/About.vue'
 import UnitsView from './views/UnitsView.vue'
 import Unit from './views/Unit.vue'
 import Designs from './views/Designs.vue'
 import Plots from './views/Plots.vue'
 import Trees from './views/Trees.vue'
-import TreesCard from './views/TreesCard.vue'
 import Segments from './views/Segments.vue'
 
 interface NavigationState {
@@ -22,6 +22,15 @@ const nav = ref<NavigationState>({
 });
 const title = ref("Units");
 const dbReady = ref(false);
+// const isMenuOpen = ref(false);
+// const menuRef = ref(null);
+
+// const handleClickOutside = (event:Event) => {
+//   // If the click was NOT on the menu or its children, close it
+//   if (menuRef.value && !menuRef.value.contains(event.target)) {
+//     isMenuOpen.value = false;
+//   }
+// };
 
 onMounted(async () => {
     await openDB();
@@ -39,9 +48,9 @@ const currentComponent = computed(() => {
         case 'plots': return Plots;
         case 'designs': return Designs;
         case 'trees': return Trees;
-        case 'trees-card': return TreesCard;
         case 'segments': return Segments;
         case 'setup': return Setup;
+        case 'about': return About;
     }
 });
 
