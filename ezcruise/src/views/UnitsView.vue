@@ -30,7 +30,7 @@ const addUnit = async () => {
 
 <style scoped>
   .card {
-    background: #eeeeee;
+    background: var(--input-bg, #fffefe);
   }
 </style>
 
