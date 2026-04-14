@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { dbPut, dbGet, getSetup, debounce, uid } from '../db.ts';
 import type { Unit, Plot, Setup } from '../types/api.ts';
+// import { MapPinXmark } from '@iconoir/vue';
 
 const props = defineProps(['navData'])
 const emit = defineEmits(['update-title','nav'])
@@ -9,6 +10,18 @@ const save = debounce(() => { if (unit.value) dbPut("units", JSON.parse(JSON.str
 
 const unit = ref<Unit>();
 const setup = ref<Setup>();
+
+interface PlotStatus {
+  code: string;
+  description: string
+}
+const plotStatus: PlotStatus[] = [
+  {code:'PLAN', description:'Planned'},
+  {code:'COMP', description:'Completed'},
+  {code:'ROAD', description:'Dropped - Road'},
+  {code:'SFTY', description:'Dropped - Safety'},
+  {code:'OUT', description:'Dropped - Out'},
+]
 
 onMounted(async () => {
   emit('update-title', 'Plots');
@@ -120,6 +133,15 @@ const getGPS = (plot: Plot) => {
 
 </script>
 
+<style scoped>
+.icon-button {
+  padding: 0px;
+}
+.icon-rotate {
+  transform: rotate(90deg);
+}
+</style>
+
 <template>
 <div v-if="unit">
   <div class="">
@@ -134,35 +156,31 @@ const getGPS = (plot: Plot) => {
         <label>Crew</label>
       </div>
       <div class="floating-label">
-        <select v-model="plot.status" @change="save" onfocus="this.select()">
-          <option value="P">Planned</option>
-          <option value="C">Completed</option>
-          <option value="DR">Drop - Road</option>
-          <option value="DS">Drop - Safety</option>
-          <option value="DO">Drop - Out</option>
+        <select v-model="plot.status" @change="save">
+          <option v-for="s in plotStatus" :key="s.code" :value="s.code">{{ s.code }}</option>
         </select>
         <label>Status</label>
       </div>
       <div class="floating-label">
-        <input placeholder=" " v-model="plot.slope" @input="save" onfocus="this.select()">
+        <input placeholder=" " v-model="plot.slope" @input="save" onfocus="this.select()" type="number">
         <label>Slope (%)</label>
       </div>
       <div class="floating-label">
-        <input placeholder=" " v-model="plot.aspect" @input="save" onfocus="this.select()">
+        <input placeholder=" " v-model="plot.aspect" @input="save" onfocus="this.select()" type="number">
         <label>Aspect (&deg)</label>
       </div>
       <div class="floating-label">
-        <input placeholder=" " v-model="plot.elevation" @input="save" onfocus="this.select()">
+        <input placeholder=" " v-model="plot.elevation" @input="save" onfocus="this.select()" type="number">
         <label>Elev (ft)</label>
       </div>
     </div>
     <div class="flex-row">
       <div class="floating-label">
-        <input placeholder=" " v-model="plot.planned_lat" @input="save">
+        <input placeholder=" " v-model="plot.planned_lat" @input="save" type="number">
         <label>Plan Lat</label>
       </div>
       <div class="floating-label">
-        <input placeholder=" " v-model="plot.planned_lon" @input="save">
+        <input placeholder=" " v-model="plot.planned_lon" @input="save" type="number">
         <label>Plan Lon</label>
       </div>
       <div class="floating-label">
@@ -190,7 +208,7 @@ const getGPS = (plot: Plot) => {
       <div>
       <button @click="$emit('nav', {view:'trees', pid:unit.uid, plotId:plot.uid})">Trees</button>
       <!-- <button @click="$emit('nav', {view:'trees-card', pid:unit.uid, plotId:plot.uid})">Trees-Card</button> -->
-      <button class="secondary" @click="getGPS(plot)">Get GPS</button>
+      <button class="secondary" @click="getGPS(plot)">GPS</button>
       </div>
       <button class="danger" @click="delPlot(plot.uid)">X</button>
     </div>

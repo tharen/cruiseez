@@ -248,7 +248,7 @@
   margin: 1px;
   /* margin-bottom: 8px; */
 
-  background:#cccccc;
+  background:#969696;
 }
 
 #map {

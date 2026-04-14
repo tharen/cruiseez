@@ -8,6 +8,8 @@ export interface Design {
   code: string;
   method: string;
   size: number;
+  min_dbh: number;
+  max_dbh: number;
   description: string;
   form_point: number
 }
@@ -50,6 +52,7 @@ export interface Unit {
 export interface Species {
   code: string;
   name: string;
+  bark: number;
 }
 
 export interface Tree {

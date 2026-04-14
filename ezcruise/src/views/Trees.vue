@@ -6,7 +6,7 @@
  -->
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeMount } from 'vue'
 import { dbPut, dbGet, debounce, uid } from '../db.ts';
 import type { Unit, Plot } from '../types/api.ts';
 
@@ -14,11 +14,31 @@ import { Table, ViewColumns2 } from '@iconoir/vue';
 
 const defaultFormPoint = 4.0;
 
+interface Condition {
+  code: string;
+  description: string
+}
+const conditions: Condition[] = [
+  {code:'Live', description:'Live'},
+  {code:'Dead', description:'Dead'},
+]
+
+interface CrownPosition {
+  code: string;
+  description: string
+}
+const crownPositionss: CrownPosition[] = [
+  {code:'DOM', description:'Dominant'},
+  {code:'COD', description:'Codominant'},
+  {code:'INT', description:'Intermediate'},
+  {code:'SUP', description:'Suppressed'},
+]
+
 const props = defineProps(['navData'])
 const emit = defineEmits(['update-title','nav'])
 const unit = ref<Unit>();
 const plot = ref<Plot>();
-const treeLayout = ref<String>(localStorage.getItem('tree_layout') ?? "Card");
+const treeLayout = ref<String>();
 
 const save = debounce((): void => {
   if (unit.value) dbPut("units", JSON.parse(JSON.stringify(unit.value)));
@@ -31,6 +51,12 @@ onMounted(async () => {
   const currentUnit = unit.value;
   if (!currentUnit) return;
   plot.value = currentUnit.plots.find(pl => pl.uid === props.navData.plotId);
+});
+
+onBeforeMount(async () => {
+  const tl = localStorage.getItem('tree_layout');
+  treeLayout.value = tl ? JSON.parse(tl) : 'Card';
+  console.log(treeLayout.value)
 });
 
 const addTree = (): void => {
@@ -71,6 +97,8 @@ const delTree = (treeId: string): void => {
 
 const toggleLayout = (): void => {
   treeLayout.value = treeLayout.value==='Card' ? 'Table' : 'Card'
+  localStorage.setItem('tree_layout', JSON.stringify(treeLayout.value));
+  // console.log(treeLayout.value);
 }
 
 
@@ -88,53 +116,70 @@ const toggleLayout = (): void => {
 <template>
 <div v-if="unit && plot">
   <div v-if="treeLayout=='Table'">
-  <div style="overflow-x: auto;">
-    <table>
-      <thead>
-        <tr>
-          <th>SD</th><th>#</th><th>Cond</th><th>Spp</th><th>Cnt</th><th>DBH</th>
-          <th>FP</th><th>FF</th><th>TDF</th><th>Bole Ht</th><th>Tot Ht</th>
-          <th>CR</th><th>CP</th><th>Dmg-1</th><th>Sev-1</th><th>Dmg-2</th><th>Sev-2</th>
-          <th>Notes</th><th>Segs</th><th>❌</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="tree in plot.trees" :key="tree.uid">
-          <td>
-            <select v-model="tree.designCode" @change="save" class="cell-input">
-              <option value=""></option>
-              <option v-for="d in (unit.designs || [])" :key="d.uid" :value="d.code">{{ d.code }}</option>
-            </select>
-          </td>
-          <td><input v-model="tree.number" @input="save" class="cell-input"></td>
-          <td><input v-model="tree.condition" @input="save" class="cell-input" onfocus="this.select()"></td>
-          <!-- <td><input v-model="tree.species" @input="save" class="cell-input" onfocus="this.select()"></td> -->
-          <td>
-            <select v-model="tree.species" @change="save" class="cell-input">
-              <option value=""></option>
-              <option v-for="s in (unit.species || [])" :key="s.code" :value="s.name">{{ s.code }}</option>
-            </select>
-          </td>
-          <td><input v-model="tree.count" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
-          <td><input v-model="tree.diameter" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
-          <td><input v-model="tree.form_point" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
-          <td><input v-model="tree.form_factor" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
-          <td><input v-model="tree.tdf" @input="save" class="cell-input" onfocus="this.select()"></td>
-          <td><input v-model="tree.bole_height" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
-          <td><input v-model="tree.total_height" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
-          <td><input v-model="tree.crown_ratio" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
-          <td><input v-model="tree.position" @input="save" class="cell-input"></td>
-          <td><input v-model="tree.damage_1" @input="save" class="cell-input" onfocus="this.select()"></td>
-          <td><input v-model="tree.severity_1" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
-          <td><input v-model="tree.damage_2" @input="save" class="cell-input" onfocus="this.select()"></td>
-          <td><input v-model="tree.severity_2" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
-          <td><input v-model="tree.notes" @input="save" class="cell-input"></td>
-          <td><button class="table-button" @click="$emit('nav', {view:'segments', pid:unit.uid, plotId:plot.uid, treeId:tree.uid})">✎</button></td>
-          <td><button class="table-button" @click="delTree(tree.uid)">❌</button></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+    <div style="overflow-x: auto;">
+      <table>
+        <thead>
+          <tr>
+            <th colspan="9"></th>
+            <th colspan="2">Height</th>
+            <th colspan="2">Crown</th>
+            <th colspan="2">Dmg-1</th>
+            <th colspan="2">Dmg-2</th>
+          </tr>
+          <tr>
+            <th>SD</th><th>#</th><th>Cond</th><th>Spp</th><th>Cnt</th><th>DBH</th>
+            <th>FP</th><th>FF</th><th>TDF</th><th>Bole</th><th>Tot</th>
+            <th>%</th><th>=</th><th>Type</th><th>Sev</th><th>Type</th><th>Sev</th>
+            <th>Notes</th><th>Segs</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="tree in plot.trees" :key="tree.uid">
+            <td>
+              <select v-model="tree.designCode" @change="save" class="cell-input">
+                <option value=""></option>
+                <option v-for="d in (unit.designs || [])" :key="d.uid" :value="d.code">{{ d.code }}</option>
+              </select>
+            </td>
+            <td><input v-model="tree.number" @input="save" class="cell-input"></td>
+            <!-- <td><input v-model="tree.condition" @input="save" class="cell-input" onfocus="this.select()"></td> -->
+            <td>
+              <select v-model="tree.condition" @change="save" class="cell-input">
+                <option v-for="c in conditions" :key="c.code" :value="c.code">{{ c.code }}</option>
+              </select>
+            </td>
+            <!-- <td><input v-model="tree.species" @input="save" class="cell-input" onfocus="this.select()"></td> -->
+            <td>
+              <select v-model="tree.species" @change="save" class="cell-input">
+                <option value=""></option>
+                <option v-for="s in (unit.species || [])" :key="s.code" :value="s.name">{{ s.code }}</option>
+              </select>
+            </td>
+            <td><input v-model="tree.count" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
+            <td><input v-model="tree.diameter" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
+            <td><input v-model="tree.form_point" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
+            <td><input v-model="tree.form_factor" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
+            <td><input v-model="tree.tdf" @input="save" class="cell-input" onfocus="this.select()"></td>
+            <td><input v-model="tree.bole_height" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
+            <td><input v-model="tree.total_height" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
+            <td><input v-model="tree.crown_ratio" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
+            <!-- <td><input v-model="tree.position" @input="save" class="cell-input"></td> -->
+            <td>
+              <select v-model="tree.position" @change="save" class="cell-input">
+                <option v-for="p in crownPositionss" :key="p.code" :value="p.code">{{ p.code }}</option>
+              </select>
+            </td>
+            <td><input v-model="tree.damage_1" @input="save" class="cell-input" onfocus="this.select()"></td>
+            <td><input v-model="tree.severity_1" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
+            <td><input v-model="tree.damage_2" @input="save" class="cell-input" onfocus="this.select()"></td>
+            <td><input v-model="tree.severity_2" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
+            <td><input v-model="tree.notes" @input="save" class="cell-input"></td>
+            <td><button class="table-button" @click="$emit('nav', {view:'segments', pid:unit.uid, plotId:plot.uid, treeId:tree.uid})">✎</button></td>
+            <td><button class="table-button" @click="delTree(tree.uid)">❌</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
   <div v-else>
     <div v-for="tree in plot.trees" :key="tree.uid" class="card">
@@ -151,11 +196,16 @@ const toggleLayout = (): void => {
             <label>Tree</label>
           </div>
           <div class="floating-label">
-            <input placeholder=" " v-model="tree.condition" @input="save" onfocus="this.select()"></input>
+            <select v-model="tree.condition" @change="save">
+              <option v-for="c in conditions" :key="c.code" :value="c.code">{{ c.description }}</option>
+            </select>
             <label>Cond</label>
           </div>
           <div class="floating-label">
-            <input placeholder=" " v-model="tree.species" @input="save" onfocus="this.select()"></input>
+            <select v-model="tree.species" @change="save">
+              <option value=""></option>
+              <option v-for="s in (unit.species || [])" :key="s.code" :value="s.name">{{ s.code }}</option>
+            </select>
             <label>Spp</label>
           </div>
           <div class="floating-label">
@@ -188,16 +238,18 @@ const toggleLayout = (): void => {
             <input placeholder=" " v-model="tree.total_height" @input="save" type="number" onfocus="this.select()"></input>
             <label>Tot Ht</label>
           </div>
+        </div>
+        <div class="flex-row">
           <div class="floating-label">
             <input placeholder=" " v-model="tree.crown_ratio" @input="save" type="number" onfocus="this.select()"></input>
             <label>CR (%)</label>
           </div>
           <div class="floating-label">
-            <input placeholder=" " v-model="tree.position" @input="save" onfocus="this.select()"></input>
+            <select v-model="tree.position" @change="save">
+              <option v-for="p in crownPositionss" :key="p.code" :value="p.code">{{ p.code }}</option>
+            </select>
             <label>CP</label>
           </div>
-        </div>
-        <div class="flex-row">
           <div class="floating-label">
             <input placeholder=" " v-model="tree.damage_1" @input="save" onfocus="this.select()"></input>
             <label>Dmg-1</label>
@@ -252,8 +304,9 @@ const toggleLayout = (): void => {
   </div>
   <Teleport to="#teleport-menu">
     <a href="#" @click="toggleLayout">
-      <span v-if="treeLayout=='Card'"><Table height="20" width="20" class="icon-button" /> Table View</span>
       <span v-if="treeLayout=='Table'"><ViewColumns2 height="20" width="20" class="icon-button icon-rotate" /> Card View</span>
+      <span v-else><Table height="20" width="20" class="icon-button" /> Table View</span>
+      
     </a>
   </Teleport>
 </div>

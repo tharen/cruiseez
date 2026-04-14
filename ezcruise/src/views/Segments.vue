@@ -7,6 +7,7 @@
 import { ref, onMounted } from 'vue'
 import { dbGet, dbPut, debounce, uid } from '../db.ts';
 import type {Unit, Tree } from '../types/api.ts';
+import { Xmark } from '@iconoir/vue';
 
 const props = defineProps(['navData'])
 const emit = defineEmits(['update-title','nav'])
@@ -72,25 +73,25 @@ const delLog = (logId: string) => {
             <th colspan="1"></th>
           </tr>
           <tr>
-            <th>Pos</th>
+            <th>#</th>
             <th>Len</th>
-            <th>Sort</th>
-            <th>Grade</th>
+            <th>Srt</th>
+            <th>Grd</th>
             <th>Type</th>
             <th>Amt</th>
-            <th>Ht</th>
+            <th>Len</th>
             <th>Small</th>
             <th>Large</th>
-            <th>Gross</th>
+            <th>Grs</th>
             <th>Net</th>
-            <th>Gross</th>
+            <th>Grs</th>
             <th>Net</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="segment in tree.segments" :key="segment.uid">
-            <td><input v-model="segment.position" @input="save" class="cell-input" type="number"></td>
+            <td><input v-model="segment.position" @input="save" class="cell-input center" type="number"></td>
             <td><input v-model="segment.length" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
             <td><input v-model="segment.sort" @input="save" class="cell-input" onfocus="this.select()"></td>
             <td><input v-model="segment.grade" @input="save" class="cell-input" onfocus="this.select()"></td>
@@ -103,7 +104,8 @@ const delLog = (logId: string) => {
             <td><input v-model="segment.net_cuft" @input="save" class="cell-input" readonly></td>
             <td><input v-model="segment.gross_bdft" @input="save" class="cell-input" readonly></td>
             <td><input v-model="segment.net_bdft" @input="save" class="cell-input" readonly></td>
-            <td><button class="table-button" @click="delLog(segment.uid)">❌</button></td>
+            <!-- <td><button class="table-button" @click="delLog(segment.uid)">❌</button></td> -->
+            <td><button class="table-button danger" @click="delLog(segment.uid)"><Xmark /></button></td>
           </tr>
         </tbody>
       </table>

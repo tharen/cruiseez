@@ -9,6 +9,18 @@ const save = debounce(() => { if (unit.value) dbPut("units", JSON.parse(JSON.str
 
 const unit = ref<Unit>();
 
+interface Method {
+  code: string;
+  description: string
+}
+const methods: Method[] = [
+  {code:'VRP', description:'Variable radius plot'},
+  {code:'RAD', description:'Fixed radius plot'},
+  {code:'FIX', description:'Fixed area plot'},
+  {code:'CEN', description:'100% census'},
+  {code:'BRN', description:'Brown\'s transect'},
+]
+
 onMounted(async () => {
   emit('update-title', 'Sample Designs');
   unit.value = await dbGet('units', props.navData.uid) as Unit;
@@ -17,14 +29,33 @@ onMounted(async () => {
 
 const addDesign = (): void => {
   if (!unit.value) return;
+  // verify codes are unique
   unit.value.designs.push({
-    uid:uid(), code:"", method:"", size:1.0, description:"", form_point: 4.0
+    uid:uid(), code:"", method:"", size:1.0, min_dbh: 0.0, max_dbh: 999.9, description:"", form_point: 4.0
   }); 
   save(); 
 };
+
 const delDesign = (designId: string): void => {
   if (!unit.value) return;
-  if (confirm("Delete design?")) {
+  
+  // Get the code for the design record
+  const design = unit.value.designs.filter(d => d.uid===designId)[0];
+  const code = design.code ?? '';
+
+  // Check if design is in use
+  const isDesignInUse = unit.value.plots.some(plot => 
+    plot.trees.some(tree => tree.designCode === code)
+  );
+
+  // Warn user and bail
+  if (isDesignInUse) {
+    alert("Design is in use by one or more trees.");
+    return;
+  }
+
+  // verify that no tree records are using the code
+  if (confirm("Delete design? This cannot be undone!")) {
     unit.value.designs = unit.value.designs.filter(d => d.uid !== designId);
     save();
   }
@@ -41,12 +72,22 @@ const delDesign = (designId: string): void => {
             <label>Code</label>
           </div>
           <div class="floating-label">
-            <input placeholder=" " v-model="design.method" @input="save">
-            <label>Sample Method</label>
+            <select v-model="design.method" @change="save">
+              <option v-for="m in methods" :key="m.code" :value="m.code">{{ m.code }}</option>
+            </select>
+            <label>Method</label>
           </div>
           <div class="floating-label">
             <input placeholder=" " v-model="design.size" @input="save">
-            <label>Sample Size</label>
+            <label>Size</label>
+          </div>
+          <div class="floating-label">
+            <input placeholder=" " v-model="design.min_dbh" type="number" @input="save">
+            <label>Min DBH</label>
+          </div>
+          <div class="floating-label">
+            <input placeholder=" " v-model="design.max_dbh" type="number" @input="save">
+            <label>Max DBH</label>
           </div>
         </div>
         <div class="floating-label">
