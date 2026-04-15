@@ -36,15 +36,18 @@ const addLog = (): void => {
   const lastLog = currentTree.segments[currentTree.segments.length-1];
   currentTree.segments.push({
   uid:uid(),position:nextPos,
-  length:0.0,
-  sort:lastLog?.sort ?? "",
-  grade:"",
-  def_type:"",
-  def_amt:0,
-  bole_height:0.0,
-  small_diam:0.0,large_diam:0.0,
-  gross_cuft:0.0,gross_bdft:0.0,
-  net_cuft:0.0,net_bdft:0.0
+  length: null,
+  sort:lastLog?.sort ?? null,
+  grade: null,
+  def_type: null,
+  def_amt: null,
+  bole_height: null,
+  small_diam:null,
+  large_diam:null,
+  gross_cuft:null,
+  gross_bdft:null,
+  net_cuft:null,
+  net_bdft:null
 }); save(); };
 
 const delLog = (logId: string) => {

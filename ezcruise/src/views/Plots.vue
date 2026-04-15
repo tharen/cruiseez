@@ -40,13 +40,13 @@ const addPlot = () => {
   
   currentUnit.plots.push({
     uid: uid(),
-    plot_num:(lastPlot?.plot_num ?? 0) + 1,
+    plot_num:(Number(lastPlot?.plot_num) ?? 0) + 1,
     crew:lastPlot?.crew ?? "",
     status:"Planned",
-    slope: 0.0, aspect: 0.0, elevation: 0.0, notes: "",
-    planned_lat: 0.0, planned_lon: 0.0, 
-    gps_lat: 0.0, gps_lon: 0.0, gps_accuracy: 0.0,
-    gps_timestamp: 0, gps_n_points: 0,
+    slope: null, aspect: null, elevation: null, notes: "",
+    planned_lat: null, planned_lon: null, 
+    gps_lat: null, gps_lon: null, gps_accuracy: null,
+    gps_timestamp: null, gps_n_points: null,
     trees:[]
   });
   save();

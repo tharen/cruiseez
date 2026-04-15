@@ -22,6 +22,12 @@
   --btn-danger: #c0392b;
 }
 
+/* Remove default iOS styling */
+input, textarea, button, select {
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 0; /* iOS often forces rounded corners */
+}
 
 html {
   margin: 0;

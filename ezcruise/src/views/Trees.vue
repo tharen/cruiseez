@@ -70,18 +70,18 @@ const addTree = (): void => {
   currentPlot.trees.push({ 
     uid:uid(),
     number:nextNum,
-    condition: lastTree?.condition ?? "",
-    designCode: lastTree?.designCode ?? "", 
-    species:lastTree?.species ?? "",
+    condition: lastTree?.condition ?? null,
+    designCode: lastTree?.designCode ?? null,
+    species:lastTree?.species ?? null,
     count:1,
-    diameter:-1.0,
+    diameter: null,
     form_point: lastTree?.form_point ?? defaultFormPoint,
-    form_factor: -1, 
-    tdf: lastTree?.tdf ?? "",
-    bole_height: -1, total_height: -1, crown_ratio: -1, position: "",
-    damage_1: "", severity_1: 0.0, damage_2: "", severity_2: 0.0, segments:[],
-    notes: "", total_cuft: 0.0, gross_cuft: 0.0, net_cuft: 0.0, gross_bdft: 0.0, net_bdft: 0.0,
-    defect: 0.0
+    form_factor: null, 
+    tdf: lastTree?.tdf ?? null,
+    bole_height: null, total_height: null, crown_ratio: null, position: null,
+    damage_1: null, severity_1: null, damage_2: null, severity_2: null, segments:[],
+    notes: null, total_cuft: null, gross_cuft: null, net_cuft: null, gross_bdft: null, net_bdft: null,
+    defect: null
   });
   save();
 }
@@ -197,7 +197,7 @@ const toggleLayout = (): void => {
           </div>
           <div class="floating-label">
             <select v-model="tree.designCode" @change="save">
-              <option value=""></option>
+              <!-- <option value=""></option> -->
               <option v-for="d in (unit.designs || [])" :key="d.uid" :value="d.code">{{ d.code }}</option>
             </select>
             <label>SD</label>
@@ -210,7 +210,7 @@ const toggleLayout = (): void => {
           </div>
           <div class="floating-label">
             <select v-model="tree.species" @change="save">
-              <option value=""></option>
+              <!-- <option value=""></option> -->
               <option v-for="s in (unit.species || [])" :key="s.code" :value="s.name">{{ s.code }}</option>
             </select>
             <label>Spp</label>
