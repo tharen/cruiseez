@@ -10,7 +10,7 @@ import { ref, onMounted, onBeforeMount } from 'vue'
 import { dbPut, dbGet, debounce, uid } from '../db.ts';
 import type { Unit, Plot } from '../types/api.ts';
 
-import { Table, ViewColumns2 } from '@iconoir/vue';
+import { Table, ViewColumns2, AlignCenter } from '@iconoir/vue';
 
 const defaultFormPoint = 4.0;
 
@@ -106,7 +106,9 @@ const toggleLayout = (): void => {
 
 <style scoped>
 .icon-button {
-  margin-right: 4px;
+  /* margin-right: 4px; */
+  color: var(--text-color-inv);
+  padding: 20;
 }
 .icon-rotate {
   transform: rotate(90deg);
@@ -127,21 +129,21 @@ const toggleLayout = (): void => {
             <th colspan="2">Dmg-2</th>
           </tr>
           <tr>
-            <th>SD</th><th>#</th><th>Cond</th><th>Spp</th><th>Cnt</th><th>DBH</th>
+            <th>#</th><th>SD</th><th>Cond</th><th>Spp</th><th>Cnt</th><th>DBH</th>
             <th>FP</th><th>FF</th><th>TDF</th><th>Bole</th><th>Tot</th>
             <th>%</th><th>=</th><th>Type</th><th>Sev</th><th>Type</th><th>Sev</th>
-            <th>Notes</th><th>Segs</th><th></th>
+            <th>Logs</th><th>Del</th><th style="text-align: left;">Notes</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="tree in plot.trees" :key="tree.uid">
+            <td><input v-model="tree.number" @input="save" class="cell-input" style="text-align: center;"></td>
             <td>
               <select v-model="tree.designCode" @change="save" class="cell-input">
                 <option value=""></option>
                 <option v-for="d in (unit.designs || [])" :key="d.uid" :value="d.code">{{ d.code }}</option>
               </select>
             </td>
-            <td><input v-model="tree.number" @input="save" class="cell-input"></td>
             <!-- <td><input v-model="tree.condition" @input="save" class="cell-input" onfocus="this.select()"></td> -->
             <td>
               <select v-model="tree.condition" @change="save" class="cell-input">
@@ -160,8 +162,8 @@ const toggleLayout = (): void => {
             <td><input v-model="tree.form_point" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
             <td><input v-model="tree.form_factor" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
             <td><input v-model="tree.tdf" @input="save" class="cell-input" onfocus="this.select()"></td>
-            <td><input v-model="tree.bole_height" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
-            <td><input v-model="tree.total_height" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
+            <td><input v-model="tree.bole_height" @input="save" class="cell-input" style="min-width: 2em;" type="number" onfocus="this.select()"></td>
+            <td><input v-model="tree.total_height" @input="save" class="cell-input" style="min-width: 2em;" type="number" onfocus="this.select()"></td>
             <td><input v-model="tree.crown_ratio" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
             <!-- <td><input v-model="tree.position" @input="save" class="cell-input"></td> -->
             <td>
@@ -173,9 +175,14 @@ const toggleLayout = (): void => {
             <td><input v-model="tree.severity_1" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
             <td><input v-model="tree.damage_2" @input="save" class="cell-input" onfocus="this.select()"></td>
             <td><input v-model="tree.severity_2" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
-            <td><input v-model="tree.notes" @input="save" class="cell-input"></td>
-            <td><button class="table-button" @click="$emit('nav', {view:'segments', pid:unit.uid, plotId:plot.uid, treeId:tree.uid})">✎</button></td>
+            <!-- <td><button class="table-button" @click="$emit('nav', {view:'segments', pid:unit.uid, plotId:plot.uid, treeId:tree.uid})">✎</button></td> -->
+            <td>
+              <button class="table-button" @click="$emit('nav', {view:'segments', pid:unit.uid, plotId:plot.uid, treeId:tree.uid})">
+              <AlignCenter style="color:black" height="20" width="20" />
+              </button>
+            </td>
             <td><button class="table-button" @click="delTree(tree.uid)">❌</button></td>
+            <td><input v-model="tree.notes" @input="save" class="cell-input" style="min-width: 10em;"></td>
           </tr>
         </tbody>
       </table>
@@ -185,15 +192,15 @@ const toggleLayout = (): void => {
     <div v-for="tree in plot.trees" :key="tree.uid" class="card">
         <div class="flex-row"  style="width: fit-content">
           <div class="floating-label">
+            <input placeholder=" " v-model="tree.number" @input="save" type="number"></input>
+            <label>Tree</label>
+          </div>
+          <div class="floating-label">
             <select v-model="tree.designCode" @change="save">
               <option value=""></option>
               <option v-for="d in (unit.designs || [])" :key="d.uid" :value="d.code">{{ d.code }}</option>
             </select>
             <label>SD</label>
-          </div>
-          <div class="floating-label">
-            <input placeholder=" " v-model="tree.number" @input="save" type="number"></input>
-            <label>Tree</label>
           </div>
           <div class="floating-label">
             <select v-model="tree.condition" @change="save">
@@ -301,13 +308,16 @@ const toggleLayout = (): void => {
   <div class="actions">
     <button @click="addTree">+ Add Tree</button>
     <!-- <button @click="$emit('nav', {view:'trees-card', pid:unit.uid, plotId:plot.uid})">Cards</button> -->
+    <button class="secondary" @click="toggleLayout" style="background-color: transparent; margin:0; padding-right: 10px;">
+      <ViewColumns2 v-if="treeLayout=='Table'" class="icon-rotate" />
+      <Table v-else class="icon-button" />
+    </button>
   </div>
   <Teleport to="#teleport-menu">
-    <a href="#" @click="toggleLayout">
+    <!-- <a href="#" @click="toggleLayout">
       <span v-if="treeLayout=='Table'"><ViewColumns2 height="20" width="20" class="icon-button icon-rotate" /> Card View</span>
       <span v-else><Table height="20" width="20" class="icon-button" /> Table View</span>
-      
-    </a>
+    </a> -->
   </Teleport>
 </div>
 </template>

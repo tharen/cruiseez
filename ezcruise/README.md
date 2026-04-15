@@ -25,4 +25,7 @@ Roadmap
 - Auto focus tree and segment after add new
 - ~~Larger buttons, links, padding for finger input~~
 - More select options
+- Implement navigation using the Vue Router and include a swipe-right event for returning to previous
 
+- Limiting distance calculator
+- Site trees and calculator, DF-Bruce, WH-??, RA-Harrington

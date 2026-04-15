@@ -8,6 +8,7 @@
   --header-color: #2f6f4e;
   --header-color-light: #39885f;
   --btn-secondary: #4d6157;
+  --btn-danger: #c0392b;
 }
 [data-theme="dark"] {
   --body-bg: #2f2f2f;
@@ -18,6 +19,7 @@
   --header-color: #2f6f4e;
   --header-color-light: #39885f;
   --btn-secondary: #4d6157;
+  --btn-danger: #c0392b;
 }
 
 
@@ -50,7 +52,7 @@ header {
   padding:0px; 
   display:flex;
   align-items: center;
-  gap:8px; 
+  gap:0.5rem; 
   justify-content: space-between; 
   height: 7dvh;
   font-size: medium;
@@ -58,7 +60,7 @@ header {
 header strong { font-size: medium; display: flex; justify-content: space-between; align-items: center;}
 header button {
   font-size: medium; background: none; border:none;
-  padding:0px 8px; border-radius:0px;
+  padding:0 0.25rem; border-radius:0px;
   color:var(--text-color-inv, #fffefe); 
 }
 .app-container {
@@ -82,15 +84,25 @@ main {
   justify-content: space-between;
 }
 
-.card { background:#969696; padding: 4px 4px 0px 4px; border-radius:0px; margin-bottom:1px; border:0px solid #ddd; }
+.card { background:#969696;
+  /* padding: 4px 4px 0px 4px; */
+  padding: 0.1rem 0.1rem 0 0.1rem;
+  border-radius:0;
+  margin-bottom:0.15rem;
+  border:0 solid #ddd;
+}
 .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:2px; }
 .flex-row { display: flex; flex-wrap: wrap; gap: 1px; }
-button { font-size: medium; margin: 4px; padding:6px; border:none; border-radius:0px;
+button { font-size: medium;
+  margin: 0.4rem;
+  padding:0.4rem;
+  border:none;
+  border-radius:0px;
   background:var(--header-color);
   color:var(--text-color-inv);
   cursor:pointer;
 }
-button.danger { background:#c0392b; }
+button.danger { background:var(--btn-danger); }
 button.secondary { background: var(--btn-secondary); }
 input, select, textarea {background-color:var(--input-bg)}
 input, select {border: 0px solid }
@@ -99,7 +111,7 @@ input:read-only { border: 0px solid; background-color: var(--input-readonly); cu
 
 table { width:100%; border-collapse:collapse; font-size: medium; background-color: var(--input-bg);}
 th { font-weight: strong; font-size: small; border:1px solid var(--body-bg); padding:2px; text-align:center; color: var(--header-color);}
-td { border:1px solid var(--body-bg); min-width:20px; padding:0px; text-align:center; position: relative;}
+td { border:1px solid var(--body-bg); min-width:1.5em; padding:0px; text-align:center; position: relative;}
 .table-button { padding:0px 4px; border:none; background-color: var(--input-bg); color: var(--text-color); cursor:pointer}
 .table-button.danger { margin: 0; background-color: var(--input-bg); color:#ff0000}
 /* Input styling for spreadsheet tables */
@@ -108,8 +120,8 @@ td { border:1px solid var(--body-bg); min-width:20px; padding:0px; text-align:ce
 select.cell-input:read-only { background-color: var(--input-bg); cursor: not-allowed;}
 .cell-input:read-only { background-color: var(--input-readonly); cursor: not-allowed;}
 
-/* Floating Labels */
-.floating-label { position: relative; flex: 1; display: flex; min-width: 40px; margin-bottom: 1px; }
+/* Floating Label Inputs */
+.floating-label { position: relative; flex: 1; display: flex; min-width: 30px; margin-bottom: 1px; }
 /* Inputs */
 .floating-label input,
 .floating-label select,
@@ -118,6 +130,7 @@ select.cell-input:read-only { background-color: var(--input-bg); cursor: not-all
   margin: 0; padding: 14px 4px 4px 4px; width: 100%; box-sizing: border-box; font-size: 14px;
 }
 
+/* read-only */
 .floating-label input:read-only {
   background-color: var(--input-readonly);
 }

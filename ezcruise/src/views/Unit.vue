@@ -243,14 +243,6 @@
   /* background: blue; */
 }
 
-.unit-detail {
-  padding: 0px;
-  margin: 1px;
-  /* margin-bottom: 8px; */
-
-  background:#969696;
-}
-
 #map {
   flex-grow: 1;
   width: 100%;
