@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { dbPut, dbGet, getSetup, debounce, uid } from '../db.ts';
-import type { Unit, Plot, Setup } from '../types/api.ts';
+import { dbPut, dbGet, getSetup, debounce, uid } from '../db';
+import type { Unit, Plot, Setup } from '../types/api';
 // import { MapPinXmark } from '@iconoir/vue';
 
 const props = defineProps(['navData'])

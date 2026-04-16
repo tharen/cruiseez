@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref,computed,onMounted } from 'vue'
-import { openDB } from './db.ts';
+import { openDB } from './db';
 import Setup from './views/Setup.vue'
 import About from './views/About.vue'
 import UnitsView from './views/UnitsView.vue'

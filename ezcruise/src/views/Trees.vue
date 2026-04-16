@@ -7,8 +7,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeMount } from 'vue'
-import { dbPut, dbGet, debounce, uid } from '../db.ts';
-import type { Unit, Plot } from '../types/api.ts';
+import { dbPut, dbGet, debounce, uid } from '../db';
+import type { Unit, Plot } from '../types/api';
 
 import { Table, ViewColumns2, AlignCenter } from '@iconoir/vue';
 

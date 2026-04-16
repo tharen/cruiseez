@@ -114,12 +114,12 @@ export async function saveSetup(setupData: Setup): Promise<IDBValidKey> {
 
 // TODO: Put default species in a configuration location
 export const defaultSpecies: Species[] = [
-  {code:"DF", name:"Douglas-fir"    , bark:0.9},
-  {code:'WH', name:'Western hemlock', bark:0.9},
-  {code:'SS', name:'Sitka spruce'   , bark:0.9},
-  {code:'NF', name:'Noble fir'      , bark:0.9},
-  {code:'RA', name:'Red alder'      , bark:0.9},
-  {code:'BM', name:'Bigleaf maple'  , bark:0.9},
-  {code:'OC', name:'Other conifer'  , bark:0.9},
-  {code:'OH', name:'Other hardwood' , bark:0.9},
+  {code:"DF", name:"Douglas-fir"    , bark_factor:0.9},
+  {code:'WH', name:'Western hemlock', bark_factor:0.9},
+  {code:'SS', name:'Sitka spruce'   , bark_factor:0.9},
+  {code:'NF', name:'Noble fir'      , bark_factor:0.9},
+  {code:'RA', name:'Red alder'      , bark_factor:0.9},
+  {code:'BM', name:'Bigleaf maple'  , bark_factor:0.9},
+  {code:'OC', name:'Other conifer'  , bark_factor:0.9},
+  {code:'OH', name:'Other hardwood' , bark_factor:0.9},
 ];

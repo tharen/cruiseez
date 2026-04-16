@@ -1,3 +1,4 @@
+
 export interface Setup {
   user_name: string;
   gps_avg_time: number;
@@ -52,7 +53,7 @@ export interface Unit {
 export interface Species {
   code: string;
   name: string;
-  bark: number;
+  bark_factor: number;
 }
 
 export interface Tree {

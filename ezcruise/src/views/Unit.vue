@@ -7,8 +7,9 @@
 // import type { Feature, Polygon } from 'geojson';
 
   import { ref, onMounted, onUnmounted } from 'vue'
-  import { dbGet, dbPut, dbDel, debounce } from '../db.ts';
-  import type { Unit, Tree} from '../types/api.ts'
+  import { dbGet, dbPut, dbDel, debounce } from '../db';
+  import type { Unit, Tree} from '../types/api'
+  // import { speciesList } from '../store';
 
   const props = defineProps(['navData'])
   const emit = defineEmits(['update-title','nav'])
@@ -156,6 +157,8 @@
       const data = await dbGet('units', props.navData.uid);
       unit.value = data as Unit;
       setTimeout(initMap, 50); // delay to ensure element mounts
+
+      // TODO: Populate the global species list
   });
 
   onUnmounted(() => {

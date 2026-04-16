@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { dbGetAll, dbAdd, uid } from '../db.ts';
-import type { Unit } from '../types/api.ts';
-import { defaultSpecies } from '../db.ts';
+import { dbGetAll, dbAdd, uid } from '../db';
+import type { Unit } from '../types/api';
+import { defaultSpecies } from '../db';
 
 const emit = defineEmits(['update-title','nav'])
 

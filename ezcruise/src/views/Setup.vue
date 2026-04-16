@@ -1,8 +1,8 @@
 <script setup lang="ts">
 
 import { ref, onMounted } from 'vue';
-import { getSetup, saveSetup } from '../db.ts';
-import type { Setup } from '../types/api.ts';
+import { getSetup, saveSetup } from '../db';
+import type { Setup } from '../types/api';
 
 const props = defineProps(['navData'])
 const emit = defineEmits(['update-title','nav'])

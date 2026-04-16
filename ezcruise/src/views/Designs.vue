@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { dbPut, dbGet, debounce, uid } from '../db.ts';
-import type { Unit } from '../types/api.ts'
+import { dbPut, dbGet, debounce, uid } from '../db';
+import type { Unit } from '../types/api'
 
 const props = defineProps(['navData'])
 const emit = defineEmits(['update-title','nav'])

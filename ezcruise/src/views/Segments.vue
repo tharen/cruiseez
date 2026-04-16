@@ -5,8 +5,8 @@
 <script setup lang="ts">
 
 import { ref, onMounted } from 'vue'
-import { dbGet, dbPut, debounce, uid } from '../db.ts';
-import type {Unit, Tree } from '../types/api.ts';
+import { dbGet, dbPut, debounce, uid } from '../db';
+import type {Unit, Tree } from '../types/api';
 import { Xmark } from '@iconoir/vue';
 
 const props = defineProps(['navData'])
@@ -59,6 +59,41 @@ const delLog = (logId: string) => {
   }
 };
 
+// const taperDiam:Number = (targ_ht:number, base_ht:number, diam_base:number, diam_bole:number, bole_len:number) => {
+//   const taper = (diam_bole-diam_base)/bole_len;
+
+//   const targ_len = targ_ht-base_ht;
+//   const targ_diam = diam_base - targ_len*taper; 
+
+//   return targ_diam;
+// }
+
+// const computeLogs = () => {
+//   const curTree = tree.value;
+//   if (!curTree) return;
+//   if (!unit.value) return;
+//   const dbh = curTree.diameter;
+//   if (!dbh) return;
+//   const ff = curTree.form_factor ?? 85;
+//   const fp = curTree.form_point ?? 4;
+//   const td = curTree.tdf ?? 6;
+//   const bht = curTree.bole_height;
+//   if (!bht) return;
+//   const spp = unit.value.species.find(sp => sp.code === curTree.species);
+//   if (!spp) return;
+//   const bf = (spp.bark_factor ?? 0.9);
+//   const sh = 0.5; // TODO: Stump ht should come from the species table
+//   const trim = 1.0;
+
+//   const dib_base = dbh * ff * bf; // diameter inside bark of first 16' log
+
+//   const large_dib = ff/(16-fp);
+//   const small_dib = taperDiam(
+//     curTree.segments[0].length + trim
+//   );
+
+// }
+
 </script>
 
 <template>
@@ -100,13 +135,13 @@ const delLog = (logId: string) => {
             <td><input v-model="segment.grade" @input="save" class="cell-input" onfocus="this.select()"></td>
             <td><input v-model="segment.def_type" @input="save" class="cell-input" onfocus="this.select()"></td>
             <td><input v-model="segment.def_amt" @input="save" class="cell-input" type="number" onfocus="this.select()"></td>
-            <td><input v-model="segment.bole_height" @input="save" class="cell-input" readonly></td>
-            <td><input v-model="segment.small_diam" @input="save" class="cell-input" readonly></td>
-            <td><input v-model="segment.large_diam" @input="save" class="cell-input" readonly></td>
-            <td><input v-model="segment.gross_cuft" @input="save" class="cell-input" readonly></td>
-            <td><input v-model="segment.net_cuft" @input="save" class="cell-input" readonly></td>
-            <td><input v-model="segment.gross_bdft" @input="save" class="cell-input" readonly></td>
-            <td><input v-model="segment.net_bdft" @input="save" class="cell-input" readonly></td>
+            <td><input v-model="segment.bole_height" class="cell-input" readonly></td>
+            <td><input v-model="segment.small_diam" class="cell-input" readonly></td>
+            <td><input v-model="segment.large_diam" class="cell-input" readonly></td>
+            <td><input v-model="segment.gross_cuft" class="cell-input" readonly></td>
+            <td><input v-model="segment.net_cuft" class="cell-input" readonly></td>
+            <td><input v-model="segment.gross_bdft" class="cell-input" readonly></td>
+            <td><input v-model="segment.net_bdft" class="cell-input" readonly></td>
             <!-- <td><button class="table-button" @click="delLog(segment.uid)">❌</button></td> -->
             <td><button class="table-button danger" @click="delLog(segment.uid)"><Xmark /></button></td>
           </tr>

@@ -9,6 +9,7 @@ export default defineConfig(({ command }) => {
   const minor_ver = pkg.version.split('.')[1];
   const patch_ver = pkg.version.split('.')[2];
   const app = command === 'build' ? 'app' : 'dev';
+  // If this is GitHub pages CI build then the root needs to be adjusted
   const root = process.env.GITHUB_ACTIONS ? `/ezcruise/timber/${app}_v${major_ver}/` : `/${app}/`;
 
   return {
@@ -16,7 +17,7 @@ export default defineConfig(({ command }) => {
     plugins: [
       vue(),
       VitePWA({
-        registerType: 'autoUpdate',
+        registerType: 'prompt',
         devOptions: {
           enabled: true
         },
