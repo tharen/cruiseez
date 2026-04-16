@@ -28,13 +28,12 @@ jobs:
           cache: 'npm'
 
       - name: Build ezcruise
+        working-directory: ezcruise
         run: |
-          npm install
-          cd ezcruise
-          npm install && npm run build
-          cd ..
-          mkdir -p deploy/timber/app_v3
-          cp -r ezcruise/dist/* deploy/timber/app_v3/
+          npm ci --legacy-peer-deps
+          npm run build
+          mkdir -p ../deploy/timber/app_v3
+          cp -r dist/* ../deploy/timber/app_v3/
         
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4.0.0
