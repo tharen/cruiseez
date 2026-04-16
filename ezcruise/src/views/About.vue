@@ -17,7 +17,10 @@ import {major_ver, minor_ver, patch_ver } from '../store';
     </h2>
     <p>Version: {{ major_ver }}.{{ minor_ver }}.{{ patch_ver }}</p>
     <p>
-      Created by Tod Haren tod.h.haren@odf.oregon.gov
+      <a href="https://github.com/ODF-StateForests/ezcruise">Git Project</a>
+    </p>
+    <p>
+      Originally Created by: Tod Haren
     </p>
     <p>
       This is alpha software and may not be stable for production use.
