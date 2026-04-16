@@ -29,7 +29,6 @@ jobs:
 
       - name: Build ezcruise
         run: |
-          npm install
           cd ezcruise
           npm install && npm run build
           cd ..
