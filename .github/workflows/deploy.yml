@@ -32,8 +32,8 @@ jobs:
         run: |
           npm ci --legacy-peer-deps
           npm run build
-          mkdir -p ../deploy/timber/app_v3
-          cp -r dist/* ../deploy/timber/app_v3/
+          mkdir -p ../deploy/timber_v3/${{ env.APP_PREFIX }}
+          cp -r dist/* ../deploy/timber_v3/${{ env.APP_PREFIX }}/
         
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4.0.0
