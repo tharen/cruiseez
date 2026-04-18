@@ -10,7 +10,7 @@ export default defineConfig(({ command }) => {
   const patch_ver = pkg.version.split('.')[2];
   const app = command === 'build' ? 'app' : 'dev';
   // If this is GitHub pages CI build then the root needs to be adjusted
-  const root = process.env.GITHUB_ACTIONS ? `/ezcruise/timber_v${major_ver}/${app}/` : `/${app}/`;
+  const root = process.env.GITHUB_ACTIONS ? `/ezcruise/timber/${app}_v${major_ver}/` : `/${app}/`;
 
   return {
     base: root,
