@@ -3,7 +3,7 @@ import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 import pkg from './package.json';
 
-export default defineConfig(({ command }) => {
+export default defineConfig(({ }) => {
   // 'serve' is used for local dev, 'build' for production builds
   const major_ver = pkg.version.split('.')[0];
   const minor_ver = pkg.version.split('.')[1];
