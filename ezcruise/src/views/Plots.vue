@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { dbPut, dbGet, getSetup, debounce, uid } from '../db';
 import type { Unit, Plot, Setup } from '../types/api';
 // import { MapPinXmark } from '@iconoir/vue';
+import GPSDialog from '../components/GPSDialog.vue';
 
 const props = defineProps(['navData'])
 const emit = defineEmits(['update-title','nav'])
@@ -40,7 +41,7 @@ const addPlot = () => {
   
   currentUnit.plots.push({
     uid: uid(),
-    plot_num:(Number(lastPlot?.plot_num) ?? 0) + 1,
+    plot_num: (lastPlot?.plot_num ? Number(lastPlot.plot_num) : 0) + 1,
     crew:lastPlot?.crew ?? "",
     status:"Planned",
     slope: null, aspect: null, elevation: null, notes: "",
@@ -209,6 +210,7 @@ const getGPS = (plot: Plot) => {
       <button @click="$emit('nav', {view:'trees', pid:unit.uid, plotId:plot.uid})">Trees</button>
       <!-- <button @click="$emit('nav', {view:'trees-card', pid:unit.uid, plotId:plot.uid})">Trees-Card</button> -->
       <button class="secondary" @click="getGPS(plot)">GPS</button>
+      <GPSDialog></GPSDialog>
       </div>
       <button class="danger" @click="delPlot(plot.uid)">X</button>
     </div>

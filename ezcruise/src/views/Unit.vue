@@ -270,7 +270,7 @@
           <label>Project ID</label>
         </div>
         <div class="floating-label">
-          <input placeholder=0.0 v-model.number="unit.gross_area" type="text" pattern="\d*\.\d" readonly>
+          <input :value="unit.gross_area?.toFixed(3)" placeholder=0.0 type="text" pattern="\d*\.\d" readonly>
           <label>Gross Area</label>
         </div>
         <div class="floating-label">
