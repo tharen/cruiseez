@@ -272,7 +272,7 @@
         </div>
         <div class="floating-label">
           <input
-            :value="unit.gross_area ? parseFloat(unit.gross_area).toFixed(2) : '0.00'"
+            :value="unit.gross_area != null ? unit.gross_area.toFixed(2) : '0.00'"
             placeholder="0.00"
             type="text"
             pattern="\d{1,3}.\d{1,2}"
