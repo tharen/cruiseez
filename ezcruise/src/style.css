@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 /* Setup props for theming */
 :root {
   --body-bg: #2f2f2f;

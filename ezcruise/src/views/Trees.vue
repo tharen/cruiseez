@@ -122,8 +122,8 @@ const toggleLayout = (): void => {
       <table>
         <thead>
           <tr>
-            <th colspan="9"></th>
-            <th colspan="2">Height</th>
+            <th colspan="8"></th>
+            <th colspan="3">Height</th>
             <th colspan="2">Crown</th>
             <th colspan="2">Dmg-1</th>
             <th colspan="2">Dmg-2</th>

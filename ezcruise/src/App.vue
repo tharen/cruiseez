@@ -79,7 +79,7 @@ const openAbout = () => {
         <button v-show="nav.view == 'units'">Home</button>
         <strong>{{ title }}</strong>
         <div class="dropdown">
-            <button class="dropdown-button">☰</button>
+            <button class="dropdown-button">⋮</button>
             <div class="dropdown-content">
                 <div id="teleport-menu"></div>
                 <a href="#" v-show="nav.view !== 'setup'" @click="openSetup">Setup</a>

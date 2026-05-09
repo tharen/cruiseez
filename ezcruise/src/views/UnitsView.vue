@@ -20,7 +20,7 @@ onMounted(() => {
 const addUnit = async () => {
     await dbAdd("units", {
       uid: uid(), name: "", project_id: "", project_name: "", 
-      gross_area: "", net_area: "", notes: "", 
+      gross_area: "0.0", net_area: "0.0", notes: "", 
       polygon: null, polygon_edited_timestamp: null, polygon_edited_by: "", 
       plots: [], designs: [], species: { ...defaultSpecies } });
     load();

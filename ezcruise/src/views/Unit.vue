@@ -6,7 +6,7 @@
   import * as turf from '@turf/turf';
 // import type { Feature, Polygon } from 'geojson';
 
-  import { ref, onMounted, onUnmounted } from 'vue'
+  import { ref, onMounted, onUnmounted, nextTick } from 'vue'
   import { dbGet, dbPut, dbDel, debounce } from '../db';
   import type { Unit, Tree} from '../types/api'
   // import { speciesList } from '../store';
@@ -156,7 +156,8 @@
       emit('update-title', 'Unit');
       const data = await dbGet('units', props.navData.uid);
       unit.value = data as Unit;
-      setTimeout(initMap, 50); // delay to ensure element mounts
+      await nextTick();
+      initMap();
 
       // TODO: Populate the global species list
   });
@@ -270,7 +271,13 @@
           <label>Project ID</label>
         </div>
         <div class="floating-label">
-          <input :value="unit.gross_area?.toFixed(3)" placeholder=0.0 type="text" pattern="\d*\.\d" readonly>
+          <input
+            :value="unit.gross_area ? parseFloat(unit.gross_area).toFixed(2) : '0.00'"
+            placeholder="0.00"
+            type="text"
+            pattern="\d{1,3}.\d{1,2}"
+            readonly
+          >
           <label>Gross Area</label>
         </div>
         <div class="floating-label">
