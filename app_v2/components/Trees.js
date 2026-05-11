@@ -26,7 +26,7 @@ export default {
                             </td>
                             <td><input v-model="tree.number" @input="save" class="cell-input"></td>
                             <td><input v-model="tree.condition" @input="save" class="cell-input"></td>
-                            <td><ButtonSelect :options="speciesOpts" v-model="tree.species" @input="save"></td> <!-- Use the speciesOpts prop to populate the options list -->
+                            <td><input v-model="tree.species" @input="save" class="cell-input"></td>
                             <td><input v-model="tree.count" @input="save" class="cell-input"></td>
                             <td><input v-model="tree.diameter" @input="save" class="cell-input"></td>
                             <td><input v-model="tree.form_point" @input="save" class="cell-input"></td>

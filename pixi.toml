@@ -9,3 +9,4 @@ version = "0.1.0"
 
 [dependencies]
 python = "3.13.*"
+nodejs = ">=25.8.2,<25.9"

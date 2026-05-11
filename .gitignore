@@ -1,3 +1,6 @@
 # pixi environments
 .pixi/*
 !.pixi/config.toml
+node_modules/*
+node_modules/.bin/acorn.cmd
+ezcruise/dev-dist/*
